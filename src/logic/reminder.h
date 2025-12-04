@@ -8,7 +8,7 @@ class Reminder : public Event{
         string longnote;
 
     public:
-        Reminder(string name, string note, string longnote);
+        Reminder(string name, string note, string image, string longnote);
         virtual ~Reminder() = default;
     
         // Getters/Setters specifici Anime

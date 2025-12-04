@@ -1,0 +1,70 @@
+{
+  "events": [
+    {
+      "type": "Appointment",
+      "name": "Riunione Team",
+      "note": "Discussione progetto Q1",
+      "image": "default",
+      "date": 20250115,
+      "hour": 14,
+      "durate": 60
+    },
+    {
+      "type": "Appointment",
+      "name": "Visita Medica",
+      "note": "Controllo annuale",
+      "image": "default",
+      "date": 20250120,
+      "hour": 10,
+      "durate": 30
+    },
+    {
+      "type": "Deadline",
+      "name": "Consegna Relazione",
+      "note": "Relazione progetto PAO",
+      "image": "default",
+      "date": 20250125,
+      "postponable": false,
+      "importance": 5
+    },
+    {
+      "type": "Deadline",
+      "name": "Pagamento Bolletta",
+      "note": "Bolletta elettrica",
+      "image": "default",
+      "date": 20250131,
+      "postponable": true,
+      "importance": 3
+    },
+    {
+      "type": "Recursive",
+      "name": "Corso di Programmazione",
+      "note": "Lezione settimanale",
+      "image": "default",
+      "date": 20250110,
+      "recurrence": "weekly"
+    },
+    {
+      "type": "Recursive",
+      "name": "Palestra",
+      "note": "Allenamento",
+      "image": "default",
+      "date": 20250106,
+      "recurrence": "daily"
+    },
+    {
+      "type": "Reminder",
+      "name": "Compleanno Maria",
+      "note": "Comprare regalo",
+      "image": "default",
+      "longnote": "Ricordati di comprare il libro che voleva e organizzare la festa per sabato sera. Invitare anche Paolo e Luca."
+    },
+    {
+      "type": "Reminder",
+      "name": "Prenotare Vacanze",
+      "note": "Estate 2025",
+      "image": "default",
+      "longnote": "Controllare disponibilità hotel a Barcellona per agosto. Cercare voli low cost e noleggio auto."
+    }
+  ]
+}

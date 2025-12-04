@@ -1,8 +1,8 @@
 #include "datable.h"
 using std::string;
 
-Datable::Datable(string name, string note, int date) : 
-    Event(name, note), date(date) {}
+Datable::Datable(string name, string note, string image, int date) : 
+    Event(name, note, image), date(date) {}
 
 int Datable::getDate() const{
     return date;

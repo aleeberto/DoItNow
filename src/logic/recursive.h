@@ -8,7 +8,7 @@ class Recursive : public Datable{
         string recurrence;
 
     public:
-        Recursive(string name, string note, int date, string recurrence);
+        Recursive(string name, string note, string image, int date, string recurrence);
         virtual ~Recursive() = default;
     
         // Getters/Setters specifici Anime

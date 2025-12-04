@@ -3,7 +3,7 @@
 #include <cctype>
 using std::string;
 
-Event::Event(string name, string note): name(name), note(note){}
+Event::Event(string name, string note, string image) : name(name), note(note), image(image){}
 
 string Event::getName() const{
     return name;
@@ -13,12 +13,20 @@ string Event::getNote() const{
     return note;
 }
 
+string Event::getImage() const{
+    return image;
+}
+
 void Event::setName(const string &updName){
     name = updName;
 }
 
 void Event::setNote(const string &updNote){
     note = updNote;
+}
+
+void Event::setImage(const string &updImage){
+    image = updImage;
 }
 
 bool Event::matchesSearch(const string& searchText) const {

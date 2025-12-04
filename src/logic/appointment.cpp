@@ -1,8 +1,8 @@
 #include "datable.h"
 using std::string;
 
-Appointment::Appointment(string name, string note, int date, int hour, int durate) :
-    Datable(name, note, date), hour(hour), durate(durate) {}
+Appointment::Appointment(string name, string note, string image, int date, int hour, int durate) :
+    Datable(name, note, image, date), hour(hour), durate(durate) {}
 
 int Appointment::getHour() const{
     return hour;
@@ -35,7 +35,7 @@ void Appointment::fromJsonSpecific(const QJsonObject& json) {
 }
 
 Appointment* Appointment::clone() const {
-    return new Appointment(getName(), getNote(), getDate(), hour, durate);
+    return new Appointment(getName(), getNote(), getImage(), getDate(), hour, durate);
 }
 
 void Appointment::accept(EventVisitor* visitor) {

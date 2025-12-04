@@ -10,7 +10,7 @@
 #include <memory>
 #include <functional>
 #include <unordered_map>
-#include "../logic/media.h"
+#include "../logic/event.h"
 #include "jsonTypeVisitor.h"
 
 class JsonService : public QObject
@@ -23,21 +23,21 @@ public:
     bool loadFromFile(const QString &filePath);
     bool saveToFile(const QString &filePath);
     
-    // Operazioni sui media
-    QVector<Media*> getAllMedia() const;
-    void addMedia(Media *media);
+    // Operazioni sugli eventi
+    QVector<Event*> getAllEvents() const;
+    void addEvent(Event *event);
     void clearAll();
     
 private:
-    QJsonArray mediaArray;
+    QJsonArray eventArray;
     JsonTypeVisitor typeVisitor;
     
     // Factory map per la creazione
-    std::unordered_map<std::string, std::function<std::unique_ptr<Media>(const QJsonObject&)>> mediaFactories;
+    std::unordered_map<std::string, std::function<std::unique_ptr<Event>(const QJsonObject&)>> eventFactories;
     
     // Metodi helper 
-    std::unique_ptr<Media> createMediaFromJson(const QJsonObject &jsonObj) const;
-    QJsonObject mediaToJson(Media *media);
+    std::unique_ptr<Event> createEventFromJson(const QJsonObject &jsonObj) const;
+    QJsonObject eventToJson(Event *event);
     void initializeFactories();
 };
 

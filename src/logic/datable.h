@@ -8,7 +8,7 @@ class Datable : public Event{
         int date;
     
     public:
-        Datable(string name, string note, int date);
+        Datable(string name, string note, string image, int date);
         virtual ~Datable() = default;
 
         // Getters/Setters comuni agli eventi con data

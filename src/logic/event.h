@@ -11,16 +11,19 @@ class Event{
     private:
         string name;
         string note;
+        string image;
 
     public:
-        Event(string name, string note);
+        Event(string name, string note, string image = "default");
         virtual ~Event() = default;
 
         // Getters/Setters comuni
         string getName() const;
         string getNote() const;
+        string getImage() const;
         void setName(const string &updName);
         void setNote(const string &updNote);
+        void setImage(const string &updImage);
         
         // Metodi virtuali
         virtual QJsonObject toJsonSpecific() const = 0;

@@ -1,5 +1,5 @@
-#ifndef MEDIASERVICE_HEADER
-#define MEDIASERVICE_HEADER
+#ifndef EVENTSERVICE_HEADER
+#define EVENTSERVICE_HEADER
 
 #include <QObject>
 #include <QVector>
@@ -11,41 +11,41 @@
 #include <QMap>
 #include <functional>
 #include <unordered_map>
-#include "../logic/media.h"
+#include "../logic/event.h"
 #include "jsonService.h"
 
-class MediaService : public QObject
+class EventService : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit MediaService(QObject *parent = nullptr);
-    ~MediaService();
+    explicit EventService(QObject *parent = nullptr);
+    ~EventService();
 
-    void setMediaCollection(const QVector<Media*>& collection);
-    QVector<Media*> getMediaCollection() const;
-    void clearMediaCollection();
+    void setEventCollection(const QVector<Event*>& collection);
+    QVector<Event*> getEventCollection() const;
+    void clearEventCollection();
 
-    bool addMedia(Media* media);
-    bool updateMedia(Media* oldMedia, Media* newMedia);
-    bool deleteMedia(Media* media);
-    Media* findMediaByTitle(const QString& title) const;
+    bool addEvent(Event* event);
+    bool updateEvent(Event* oldEvent, Event* newEvent);
+    bool deleteEvent(Event* event);
+    Event* findEventByName(const QString& name) const;
 
     bool loadFromFile(const QString& filePath);
     bool saveToFile(const QString& filePath);
     void setJsonService(JsonService* service);
 
-    QVector<Media*> filterMedia(const QString& category, const QString& searchText) const;
+    QVector<Event*> filterEvents(const QString& category, const QString& searchText) const;
 
-    int getMediaCount() const;
+    int getEventCount() const;
     bool isEmpty() const;
 
-    Media* createMediaFromFields(const QString& type, const QList<QLineEdit*>& fields, QWidget* parent);
+    Event* createEventFromFields(const QString& type, const QList<QLineEdit*>& fields, QWidget* parent);
 
 signals:
-    void mediaAdded(Media* media);
-    void mediaUpdated(Media* oldMedia, Media* newMedia);
-    void mediaDeleted(Media* media);
+    void eventAdded(Event* event);
+    void eventUpdated(Event* oldEvent, Event* newEvent);
+    void eventDeleted(Event* event);
     void collectionChanged();
     void dataLoaded();
     void dataSaved();
@@ -54,11 +54,10 @@ private:
     // Costanti per validazione
     static const QStringList TRUE_VALUES;
     static const QStringList FALSE_VALUES;
-    static constexpr int MIN_FILM_FIELDS = 6;
-    static constexpr int MIN_SERIES_FIELDS = 9;
-    static constexpr int MIN_BOOK_FIELDS = 6;
-    static constexpr int MIN_MANGA_FIELDS = 7;
-    static constexpr int MIN_CD_FIELDS = 6;
+    static constexpr int MIN_APPOINTMENT_FIELDS = 6;
+    static constexpr int MIN_DEADLINE_FIELDS = 6;
+    static constexpr int MIN_RECURSIVE_FIELDS = 5;
+    static constexpr int MIN_REMINDER_FIELDS = 4;
 
     struct ValidationConfig {
         int minFields;
@@ -67,17 +66,17 @@ private:
         QVector<QPair<int, QString>> booleanFields;
     };
 
-    QVector<Media*> mediaCollection;
+    QVector<Event*> eventCollection;
     JsonService* jsonService;
     QString currentFilePath;
     
-    // Factory map per la creazione dei media da form
-    std::unordered_map<std::string, std::function<Media*(const QList<QLineEdit*>&)>> mediaCreationFactories;
+    // Factory map per la creazione degli eventi da form
+    std::unordered_map<std::string, std::function<Event*(const QList<QLineEdit*>&)>> eventCreationFactories;
     
     static const QMap<QString, ValidationConfig> validationConfigs;
 
     void updateJsonService();
-    void initializeMediaFactories();
+    void initializeEventFactories();
     
     // Metodi di validazione unificati
     bool validateRequiredFields(const QList<QLineEdit*>& fields, QWidget* parent) const;
@@ -98,7 +97,7 @@ private:
 
 // Template
 template<typename Validator>
-bool MediaService::validateFieldAtIndex(const QList<QLineEdit*>& fields, int index, 
+bool EventService::validateFieldAtIndex(const QList<QLineEdit*>& fields, int index, 
                                        const QString& fieldName, QWidget* parent, 
                                        Validator validator) const {
     if (index >= fields.size()) return false;

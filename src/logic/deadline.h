@@ -9,7 +9,7 @@ class Deadline : public Datable{
         int importance;
 
     public:
-        Deadline(string name, string note, int date, bool postponable, int importance);
+        Deadline(string name, string note, string image, int date, bool postponable, int importance);
         virtual ~Deadline() = default;
     
         // Getters/Setters specifici Anime

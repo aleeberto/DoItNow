@@ -9,7 +9,7 @@ class Appointment : public Datable{
         int durate;
 
     public:
-        Appointment(string name, string note, int date, int hour, int durate);
+        Appointment(string name, string note, string image, int date, int hour, int durate);
         virtual ~Appointment() = default;
     
         // Getters/Setters specifici Appointment

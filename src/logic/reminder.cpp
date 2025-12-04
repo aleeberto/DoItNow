@@ -1,10 +1,10 @@
-#include "event.h"
+#include "reminder.h"
 using std::string;
 
-Reminder::Reminder(string name, string note, string longnote) :
-    Event(name, note), longnote(longnote){}
+Reminder::Reminder(string name, string note, string image, string longnote) :
+    Event(name, note, image), longnote(longnote){}
 
-string longnote Reminder::getLongNote() const{
+string Reminder::getLongNote() const{
     return longnote;
 }
 
@@ -20,11 +20,12 @@ QJsonObject Reminder::toJsonSpecific() const {
 }
 
 void Reminder::fromJsonSpecific(const QJsonObject& json) {
+
     longnote = json["longnote"].toString().toStdString();
 }
     
 Event* Reminder::clone() const {
-    return new Reminder(getName(), getNote(), longnote);
+    return new Reminder(getName(), getNote(), getImage(), longnote);
 }
 
 void Reminder::accept(EventVisitor* visitor) {

@@ -1,8 +1,8 @@
 #include "deadline.h"
 using std::string;
     
-Deadline::Deadline(string name, string note, int date, bool postponable, int importance) :
-    Datable(name, note, date), postponable(postponable), importance(importance){}
+Deadline::Deadline(string name, string note, string image, int date, bool postponable, int importance) :
+    Datable(name, note, image, date), postponable(postponable), importance(importance){}
 
 bool Deadline::getPostponable() const{
     return postponable;

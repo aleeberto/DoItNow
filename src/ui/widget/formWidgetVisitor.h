@@ -7,14 +7,16 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QLineEdit>
+#include <QDateEdit>
+#include <QTimeEdit>
 #include <QFileDialog>
 #include <QDir>
 #include <QVector>
-#include "../../logic/mediaVisitor.h"
+#include "../../logic/eventVisitor.h"
 
-class FormWidgetVisitor : public MediaVisitor {
+class FormWidgetVisitor : public EventVisitor {
 public:
-    enum class FieldType { TEXT, INTEGER, POSITIVE_INTEGER, BOOLEAN, IMAGE };
+    enum class FieldType { TEXT, INTEGER, POSITIVE_INTEGER, BOOLEAN, DATE, TIME, IMAGE };
     
     struct FieldConfig {
         QString label;
@@ -29,23 +31,19 @@ private:
     QWidget* parentWidget;
     QWidget* resultWidget;
     
-    // Configurazioni standard per ogni tipo di media
-    static const QVector<FieldConfig> FILM_FIELDS;
-    static const QVector<FieldConfig> SERIES_FIELDS;
-    static const QVector<FieldConfig> ANIME_FIELDS;
-    static const QVector<FieldConfig> BOOK_FIELDS;
-    static const QVector<FieldConfig> MANGA_FIELDS;
-    static const QVector<FieldConfig> CD_FIELDS;
+    // Configurazioni standard per ogni tipo di evento
+    static const QVector<FieldConfig> APPOINTMENT_FIELDS;
+    static const QVector<FieldConfig> DEADLINE_FIELDS;
+    static const QVector<FieldConfig> RECURSIVE_FIELDS;
+    static const QVector<FieldConfig> REMINDER_FIELDS;
     
 public:
     explicit FormWidgetVisitor(QWidget* parent);
     
-    void visit(Film* film) override;
-    void visit(SerieTv* serieTv) override;
-    void visit(Anime* anime) override;
-    void visit(Libro* libro) override;
-    void visit(Manga* manga) override;
-    void visit(Cd* cd) override;
+    void visit(Appointment* appointment) override;
+    void visit(Deadline* deadline) override;
+    void visit(Recursive* recursive) override;
+    void visit(Reminder* reminder) override;
     
     QWidget* getResultWidget() const;
     
@@ -55,24 +53,24 @@ private:
     QWidget* createFieldWidget(const FieldConfig& config, const QString& value = QString());
     QLineEdit* createStandardLineEdit(const QString& placeholder);
     QWidget* createImageFieldWidget(const QString& placeholder, const QString& value);
+    QWidget* createDateFieldWidget(const QString& value);
+    QWidget* createTimeFieldWidget(const QString& value);
     
-    template<typename MediaType>
-    void visitGeneric(MediaType* media, const QVector<FieldConfig>& fieldConfigs);
+    template<typename EventType>
+    void visitGeneric(EventType* event, const QVector<FieldConfig>& fieldConfigs);
     
-    QStringList extractValues(Film* film);
-    QStringList extractValues(SerieTv* serieTv);
-    QStringList extractValues(Anime* anime);
-    QStringList extractValues(Libro* libro);
-    QStringList extractValues(Manga* manga);
-    QStringList extractValues(Cd* cd);
+    QStringList extractValues(Appointment* appointment);
+    QStringList extractValues(Deadline* deadline);
+    QStringList extractValues(Recursive* recursive);
+    QStringList extractValues(Reminder* reminder);
 };
 
 // Template
-template<typename MediaType>
-void FormWidgetVisitor::visitGeneric(MediaType* media, const QVector<FieldConfig>& fieldConfigs) {
+template<typename EventType>
+void FormWidgetVisitor::visitGeneric(EventType* event, const QVector<FieldConfig>& fieldConfigs) {
     QStringList values;
-    if (media) {
-        values = extractValues(media);
+    if (event) {
+        values = extractValues(event);
     }
     resultWidget = createStandardForm(fieldConfigs, values);
 }
