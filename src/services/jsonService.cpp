@@ -1,75 +1,40 @@
 #include "jsonService.h"
-#include "../logic/film.h"
-#include "../logic/serieTv.h"
-#include "../logic/anime.h"
-#include "../logic/libro.h"
-#include "../logic/manga.h"
-#include "../logic/cd.h"
+#include "../logic/appointment.h"
+#include "../logic/deadline.h"
+#include "../logic/recursive.h"
+#include "../logic/reminder.h"
 
 JsonService::JsonService(QObject *parent) : QObject(parent) {
     initializeFactories();
 }
 
 void JsonService::initializeFactories() {
-    // Registrazione delle factory per ogni tipo di media
-    mediaFactories["Film"] = [](const QJsonObject& json) -> std::unique_ptr<Media> {
-        std::string titolo = json["titolo"].toString().toStdString();
-        int anno = json["anno"].toInt();
-        std::string immagine = json["immagine"].toString().toStdString();
-        
-        auto film = std::make_unique<Film>(titolo, anno, immagine, "", "", 0);
-        film->fromJsonSpecific(json);
-        return film;
+    // Factory per Appointment
+    eventFactories["Appointment"] = [](const QJsonObject& json) -> std::unique_ptr<Event> {
+        auto appointment = std::make_unique<Appointment>("", "", "", 0, 0, 0);
+        appointment->fromJsonSpecific(json);
+        return appointment;
     };
     
-    mediaFactories["Serie Tv"] = [](const QJsonObject& json) -> std::unique_ptr<Media> {
-        std::string titolo = json["titolo"].toString().toStdString();
-        int anno = json["anno"].toInt();
-        std::string immagine = json["immagine"].toString().toStdString();
-        
-        auto serie = std::make_unique<SerieTv>(titolo, anno, immagine, 0, 0, 0, false, "", "");
-        serie->fromJsonSpecific(json);
-        return serie;
+    // Factory per Deadline
+    eventFactories["Deadline"] = [](const QJsonObject& json) -> std::unique_ptr<Event> {
+        auto deadline = std::make_unique<Deadline>("", "", "", 0, false, 0);
+        deadline->fromJsonSpecific(json);
+        return deadline;
     };
     
-    mediaFactories["Anime"] = [](const QJsonObject& json) -> std::unique_ptr<Media> {
-        std::string titolo = json["titolo"].toString().toStdString();
-        int anno = json["anno"].toInt();
-        std::string immagine = json["immagine"].toString().toStdString();
-        
-        auto anime = std::make_unique<Anime>(titolo, anno, immagine, 0, 0, 0, false, "", "");
-        anime->fromJsonSpecific(json);
-        return anime;
+    // Factory per Recursive
+    eventFactories["Recursive"] = [](const QJsonObject& json) -> std::unique_ptr<Event> {
+        auto recursive = std::make_unique<Recursive>("", "", "", 0, "");
+        recursive->fromJsonSpecific(json);
+        return recursive;
     };
     
-    mediaFactories["Libro"] = [](const QJsonObject& json) -> std::unique_ptr<Media> {
-        std::string titolo = json["titolo"].toString().toStdString();
-        int anno = json["anno"].toInt();
-        std::string immagine = json["immagine"].toString().toStdString();
-        
-        auto libro = std::make_unique<Libro>(titolo, anno, immagine, "", 0, "");
-        libro->fromJsonSpecific(json);
-        return libro;
-    };
-    
-    mediaFactories["Manga"] = [](const QJsonObject& json) -> std::unique_ptr<Media> {
-        std::string titolo = json["titolo"].toString().toStdString();
-        int anno = json["anno"].toInt();
-        std::string immagine = json["immagine"].toString().toStdString();
-        
-        auto manga = std::make_unique<Manga>(titolo, anno, immagine, "", "", 0, false);
-        manga->fromJsonSpecific(json);
-        return manga;
-    };
-    
-    mediaFactories["Cd"] = [](const QJsonObject& json) -> std::unique_ptr<Media> {
-        std::string titolo = json["titolo"].toString().toStdString();
-        int anno = json["anno"].toInt();
-        std::string immagine = json["immagine"].toString().toStdString();
-        
-        auto cd = std::make_unique<Cd>(titolo, anno, immagine, "", 0, 0);
-        cd->fromJsonSpecific(json);
-        return cd;
+    // Factory per Reminder
+    eventFactories["Reminder"] = [](const QJsonObject& json) -> std::unique_ptr<Event> {
+        auto reminder = std::make_unique<Reminder>("", "", "", "");
+        reminder->fromJsonSpecific(json);
+        return reminder;
     };
 }
 
@@ -89,7 +54,7 @@ bool JsonService::loadFromFile(const QString &filePath) {
         return false;
     }
     
-    mediaArray = doc.object()["media"].toArray();
+    eventArray = doc.object()["events"].toArray();
     return true;
 }
 
@@ -101,7 +66,7 @@ bool JsonService::saveToFile(const QString &filePath) {
     }
     
     QJsonObject rootObject;
-    rootObject["media"] = mediaArray;
+    rootObject["events"] = eventArray;
     
     QJsonDocument doc(rootObject);
     file.write(doc.toJson(QJsonDocument::Indented));
@@ -110,55 +75,53 @@ bool JsonService::saveToFile(const QString &filePath) {
     return true;
 }
 
-QVector<Media*> JsonService::getAllMedia() const {
-    QVector<Media*> result;
+QVector<Event*> JsonService::getAllEvents() const {
+    QVector<Event*> result;
     
-    for (const QJsonValue &value : mediaArray) {
-        auto media = createMediaFromJson(value.toObject());
-        if (media) {
-            result.append(media.release());
+    for (const QJsonValue &value : eventArray) {
+        auto event = createEventFromJson(value.toObject());
+        if (event) {
+            result.append(event.release());
         }
     }
     
     return result;
 }
 
-void JsonService::addMedia(Media *media) {
-    if (!media) return;
-    mediaArray.append(mediaToJson(media));
+void JsonService::addEvent(Event *event) {
+    if (!event) return;
+    eventArray.append(eventToJson(event));
 }
 
 void JsonService::clearAll() {
-    mediaArray = QJsonArray();
+    eventArray = QJsonArray();
 }
 
-std::unique_ptr<Media> JsonService::createMediaFromJson(const QJsonObject &jsonObj) const {
+std::unique_ptr<Event> JsonService::createEventFromJson(const QJsonObject &jsonObj) const {
     QString type = jsonObj["type"].toString();
     std::string typeStr = type.toStdString();
     
-    auto factoryIt = mediaFactories.find(typeStr);
-    if (factoryIt != mediaFactories.end()) {
+    auto factoryIt = eventFactories.find(typeStr);
+    if (factoryIt != eventFactories.end()) {
         return factoryIt->second(jsonObj);
     }
     
-    qWarning() << "Tipo di media sconosciuto:" << type;
+    qWarning() << "Tipo di evento sconosciuto:" << type;
     return nullptr;
 }
 
-QJsonObject JsonService::mediaToJson(Media *media) {
-    if (!media) return QJsonObject();
+QJsonObject JsonService::eventToJson(Event *event) {
+    if (!event) return QJsonObject();
     
     QJsonObject jsonObj;
     
-    // Usa il visitor per ottenere il tipo
-    typeVisitor.reset();
-    media->accept(&typeVisitor);
+    // Campi comuni
+    jsonObj["name"] = QString::fromStdString(event->getName());
+    jsonObj["note"] = QString::fromStdString(event->getNote());
+    jsonObj["image"] = QString::fromStdString(event->getImage());
     
-    jsonObj["titolo"] = QString::fromStdString(media->getTitolo());
-    jsonObj["anno"] = media->getAnno();
-    jsonObj["immagine"] = QString::fromStdString(media->getImmagine());
-    
-    QJsonObject specificData = media->toJsonSpecific();
+    // Campi specifici
+    QJsonObject specificData = event->toJsonSpecific();
     for (auto it = specificData.begin(); it != specificData.end(); ++it) {
         jsonObj[it.key()] = it.value();
     }

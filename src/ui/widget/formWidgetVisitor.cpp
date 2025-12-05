@@ -1,74 +1,44 @@
 #include "formWidgetVisitor.h"
-#include "../../logic/film.h"
-#include "../../logic/serieTv.h"
-#include "../../logic/anime.h"
-#include "../../logic/libro.h"
-#include "../../logic/manga.h"
-#include "../../logic/cd.h"
+#include "../../logic/appointment.h"
+#include "../../logic/deadline.h"
+#include "../../logic/recursive.h"
+#include "../../logic/reminder.h"
 #include "../../services/styleUtils.h"
 
 using FT = FormWidgetVisitor::FieldType;
 
 // Definizione delle configurazioni statiche
-const QVector<FormWidgetVisitor::FieldConfig> FormWidgetVisitor::FILM_FIELDS = {
-    {"Titolo", "Inserisci titolo"},
-    {"Immagine", "Inserisci percorso immagine", FT::IMAGE},
-    {"Anno", "Inserisci anno", FT::INTEGER},
-    {"Regista", "Inserisci regista"},
-    {"Attore Protagonista", "Inserisci attore protagonista"},
-    {"Durata (min)", "Inserisci durata in minuti", FT::POSITIVE_INTEGER}
+const QVector<FormWidgetVisitor::FieldConfig> FormWidgetVisitor::APPOINTMENT_FIELDS = {
+    {"Nome", "Inserisci nome"},
+    {"Note", "Inserisci note"},
+    {"Data", "YYYYMMDD (es: 20250115)", FT::INTEGER},
+    {"Ora", "HH (0-23)", FT::POSITIVE_INTEGER},
+    {"Durata (min)", "Durata in minuti", FT::POSITIVE_INTEGER},
+    {"Immagine", "Inserisci percorso immagine o lascia vuoto", FT::IMAGE}
 };
 
-const QVector<FormWidgetVisitor::FieldConfig> FormWidgetVisitor::SERIES_FIELDS = {
-    {"Titolo", "Inserisci titolo"},
-    {"Immagine", "Inserisci percorso immagine", FT::IMAGE},
-    {"Anno", "Inserisci anno", FT::INTEGER},
-    {"Numero Episodi", "Inserisci numero episodi", FT::POSITIVE_INTEGER},
-    {"Numero Stagioni", "Inserisci numero stagioni", FT::POSITIVE_INTEGER},
-    {"Durata Media Episodio (min)", "Inserisci durata media episodio", FT::POSITIVE_INTEGER},
-    {"In Corso (true/false)", "true o false", FT::BOOLEAN},
-    {"Ideatore", "Inserisci ideatore"},
-    {"Casa Produttrice", "Inserisci casa produttrice"}
+const QVector<FormWidgetVisitor::FieldConfig> FormWidgetVisitor::DEADLINE_FIELDS = {
+    {"Nome", "Inserisci nome"},
+    {"Note", "Inserisci note"},
+    {"Data", "YYYYMMDD (es: 20250115)", FT::INTEGER},
+    {"Posticipabile", "true o false", FT::BOOLEAN},
+    {"Importanza", "1-5", FT::POSITIVE_INTEGER},
+    {"Immagine", "Inserisci percorso immagine o lascia vuoto", FT::IMAGE}
 };
 
-const QVector<FormWidgetVisitor::FieldConfig> FormWidgetVisitor::ANIME_FIELDS = {
-    {"Titolo", "Inserisci titolo"},
-    {"Immagine", "Inserisci percorso immagine", FT::IMAGE},
-    {"Anno", "Inserisci anno", FT::INTEGER},
-    {"Numero Episodi", "Inserisci numero episodi", FT::POSITIVE_INTEGER},
-    {"Numero Stagioni", "Inserisci numero stagioni", FT::POSITIVE_INTEGER},
-    {"Durata Media Episodio (min)", "Inserisci durata media episodio", FT::POSITIVE_INTEGER},
-    {"In Corso (true/false)", "true o false", FT::BOOLEAN},
-    {"Disegnatore", "Inserisci disegnatore"},
-    {"Studio Animazione", "Inserisci studio animazione"}
+const QVector<FormWidgetVisitor::FieldConfig> FormWidgetVisitor::RECURSIVE_FIELDS = {
+    {"Nome", "Inserisci nome"},
+    {"Note", "Inserisci note"},
+    {"Data", "YYYYMMDD (es: 20250115)", FT::INTEGER},
+    {"Ricorrenza", "daily, weekly, monthly, yearly"},
+    {"Immagine", "Inserisci percorso immagine o lascia vuoto", FT::IMAGE}
 };
 
-const QVector<FormWidgetVisitor::FieldConfig> FormWidgetVisitor::BOOK_FIELDS = {
-    {"Titolo", "Inserisci titolo"},
-    {"Immagine", "Inserisci percorso immagine", FT::IMAGE},
-    {"Anno", "Inserisci anno", FT::INTEGER},
-    {"Scrittore", "Inserisci scrittore"},
-    {"Anno Stampa", "Inserisci anno stampa", FT::INTEGER},
-    {"Casa Editrice", "Inserisci casa editrice"}
-};
-
-const QVector<FormWidgetVisitor::FieldConfig> FormWidgetVisitor::MANGA_FIELDS = {
-    {"Titolo", "Inserisci titolo"},
-    {"Immagine", "Inserisci percorso immagine", FT::IMAGE},
-    {"Anno", "Inserisci anno", FT::INTEGER},
-    {"Scrittore", "Inserisci scrittore"},
-    {"Illustratore", "Inserisci illustratore"},
-    {"Numero Libri", "Inserisci numero libri", FT::POSITIVE_INTEGER},
-    {"Concluso (true/false)", "true o false", FT::BOOLEAN}
-};
-
-const QVector<FormWidgetVisitor::FieldConfig> FormWidgetVisitor::CD_FIELDS = {
-    {"Titolo", "Inserisci titolo"},
-    {"Immagine", "Inserisci percorso immagine", FT::IMAGE},
-    {"Anno", "Inserisci anno", FT::INTEGER},
-    {"Artista", "Inserisci artista"},
-    {"Numero Tracce", "Inserisci numero tracce", FT::POSITIVE_INTEGER},
-    {"Durata Media Tracce (sec)", "Inserisci durata media tracce", FT::POSITIVE_INTEGER}
+const QVector<FormWidgetVisitor::FieldConfig> FormWidgetVisitor::REMINDER_FIELDS = {
+    {"Nome", "Inserisci nome"},
+    {"Note breve", "Inserisci note brevi"},
+    {"Note lunghe", "Inserisci note dettagliate"},
+    {"Immagine", "Inserisci percorso immagine o lascia vuoto", FT::IMAGE}
 };
 
 FormWidgetVisitor::FormWidgetVisitor(QWidget* parent) 
@@ -111,6 +81,10 @@ QWidget* FormWidgetVisitor::createStandardForm(const QVector<FieldConfig>& field
 QWidget* FormWidgetVisitor::createFieldWidget(const FieldConfig& config, const QString& value) {
     if (config.type == FieldType::IMAGE) {
         return createImageFieldWidget(config.placeholder, value);
+    } else if (config.type == FieldType::DATE) {
+        return createDateFieldWidget(value);
+    } else if (config.type == FieldType::TIME) {
+        return createTimeFieldWidget(value);
     } else {
         QLineEdit* lineEdit = createStandardLineEdit(config.placeholder);
         if (!value.isEmpty()) {
@@ -135,7 +109,7 @@ QWidget* FormWidgetVisitor::createImageFieldWidget(const QString& placeholder, c
     imageLayout->setSpacing(StyleUtils::Dimensions::SPACING_MEDIUM);
     
     QLineEdit* lineEdit = createStandardLineEdit(placeholder);
-    if (!value.isEmpty()) {
+    if (!value.isEmpty() && value != "default") {
         lineEdit->setText(value);
     }
     
@@ -143,7 +117,7 @@ QWidget* FormWidgetVisitor::createImageFieldWidget(const QString& placeholder, c
     browseButton->setIcon(QIcon("../resources/icon/image.png"));
     browseButton->setIconSize(QSize(StyleUtils::Dimensions::ICON_SIZE_LARGE, 
                                      StyleUtils::Dimensions::ICON_SIZE_LARGE));
-    browseButton->setToolTip("Seleziona immagine");
+    browseButton->setToolTip("Seleziona immagine (lascia vuoto per usare quella di default)");
     browseButton->setFixedSize(StyleUtils::Dimensions::BUTTON_HEIGHT, StyleUtils::Dimensions::BUTTON_HEIGHT);
     browseButton->setStyleSheet(StyleUtils::getItemButtonStyle());
     
@@ -168,101 +142,77 @@ QWidget* FormWidgetVisitor::createImageFieldWidget(const QString& placeholder, c
     return imageContainer;
 }
 
-// Implementazioni dei metodi visit usando il template
-void FormWidgetVisitor::visit(Film* film) {
-    visitGeneric(film, FILM_FIELDS);
+QWidget* FormWidgetVisitor::createDateFieldWidget(const QString& value) {
+    QLineEdit* lineEdit = createStandardLineEdit("YYYYMMDD (es: 20250115)");
+    if (!value.isEmpty()) {
+        lineEdit->setText(value);
+    }
+    return lineEdit;
 }
 
-void FormWidgetVisitor::visit(SerieTv* serieTv) {
-    visitGeneric(serieTv, SERIES_FIELDS);
+QWidget* FormWidgetVisitor::createTimeFieldWidget(const QString& value) {
+    QLineEdit* lineEdit = createStandardLineEdit("HH (0-23)");
+    if (!value.isEmpty()) {
+        lineEdit->setText(value);
+    }
+    return lineEdit;
 }
 
-void FormWidgetVisitor::visit(Anime* anime) {
-    visitGeneric(anime, ANIME_FIELDS);
+// Implementazioni dei metodi visit
+void FormWidgetVisitor::visit(Appointment* appointment) {
+    visitGeneric(appointment, APPOINTMENT_FIELDS);
 }
 
-void FormWidgetVisitor::visit(Libro* libro) {
-    visitGeneric(libro, BOOK_FIELDS);
+void FormWidgetVisitor::visit(Deadline* deadline) {
+    visitGeneric(deadline, DEADLINE_FIELDS);
 }
 
-void FormWidgetVisitor::visit(Manga* manga) {
-    visitGeneric(manga, MANGA_FIELDS);
+void FormWidgetVisitor::visit(Recursive* recursive) {
+    visitGeneric(recursive, RECURSIVE_FIELDS);
 }
 
-void FormWidgetVisitor::visit(Cd* cd) {
-    visitGeneric(cd, CD_FIELDS);
+void FormWidgetVisitor::visit(Reminder* reminder) {
+    visitGeneric(reminder, REMINDER_FIELDS);
 }
 
-// Metodi di estrazione dei valori specifici per tipo
-QStringList FormWidgetVisitor::extractValues(Film* film) {
+// Metodi di estrazione dei valori
+QStringList FormWidgetVisitor::extractValues(Appointment* appointment) {
     return {
-        QString::fromStdString(film->getTitolo()),
-        QString::fromStdString(film->getImmagine()),
-        QString::number(film->getAnno()),
-        QString::fromStdString(film->getRegista()),
-        QString::fromStdString(film->getAttoreProtagonista()),
-        QString::number(film->getDurata())
+        QString::fromStdString(appointment->getName()),
+        QString::fromStdString(appointment->getNote()),
+        QString::number(appointment->getDate()),
+        QString::number(appointment->getHour()),
+        QString::number(appointment->getDurate()),
+        QString::fromStdString(appointment->getImage())
     };
 }
 
-QStringList FormWidgetVisitor::extractValues(SerieTv* serieTv) {
+QStringList FormWidgetVisitor::extractValues(Deadline* deadline) {
     return {
-        QString::fromStdString(serieTv->getTitolo()),
-        QString::fromStdString(serieTv->getImmagine()),
-        QString::number(serieTv->getAnno()),
-        QString::number(serieTv->getNumEpisodi()),
-        QString::number(serieTv->getNumStagioni()),
-        QString::number(serieTv->getDurataMediaEp()),
-        serieTv->getInCorso() ? "true" : "false",
-        QString::fromStdString(serieTv->getIdeatore()),
-        QString::fromStdString(serieTv->getCasaProduttrice())
+        QString::fromStdString(deadline->getName()),
+        QString::fromStdString(deadline->getNote()),
+        QString::number(deadline->getDate()),
+        deadline->getPostponable() ? "true" : "false",
+        QString::number(deadline->getImportance()),
+        QString::fromStdString(deadline->getImage())
     };
 }
 
-QStringList FormWidgetVisitor::extractValues(Anime* anime) {
+QStringList FormWidgetVisitor::extractValues(Recursive* recursive) {
     return {
-        QString::fromStdString(anime->getTitolo()),
-        QString::fromStdString(anime->getImmagine()),
-        QString::number(anime->getAnno()),
-        QString::number(anime->getNumEpisodi()),
-        QString::number(anime->getNumStagioni()),
-        QString::number(anime->getDurataMediaEp()),
-        anime->getInCorso() ? "true" : "false",
-        QString::fromStdString(anime->getDisegnatore()),
-        QString::fromStdString(anime->getStudioAnimazione())
+        QString::fromStdString(recursive->getName()),
+        QString::fromStdString(recursive->getNote()),
+        QString::number(recursive->getDate()),
+        QString::fromStdString(recursive->getRecurrence()),
+        QString::fromStdString(recursive->getImage())
     };
 }
 
-QStringList FormWidgetVisitor::extractValues(Libro* libro) {
+QStringList FormWidgetVisitor::extractValues(Reminder* reminder) {
     return {
-        QString::fromStdString(libro->getTitolo()),
-        QString::fromStdString(libro->getImmagine()),
-        QString::number(libro->getAnno()),
-        QString::fromStdString(libro->getScrittore()),
-        QString::number(libro->getAnnoStampa()),
-        QString::fromStdString(libro->getCasaEditrice())
-    };
-}
-
-QStringList FormWidgetVisitor::extractValues(Manga* manga) {
-    return {
-        QString::fromStdString(manga->getTitolo()),
-        QString::fromStdString(manga->getImmagine()),
-        QString::number(manga->getAnno()),
-        QString::fromStdString(manga->getScrittore()),
-        QString::fromStdString(manga->getIllustratore()),
-        QString::number(manga->getNumLibri()),
-        manga->getConcluso() ? "true" : "false"
-    };
-}
-
-QStringList FormWidgetVisitor::extractValues(Cd* cd) {
-    return {
-        QString::fromStdString(cd->getTitolo()),
-        QString::fromStdString(cd->getImmagine()),
-        QString::number(cd->getAnno()),
-        QString::fromStdString(cd->getArtista()),
-        QString::number(cd->getNumTracce()),
-        QString::number(cd->getDurataMedTracce())
+        QString::fromStdString(reminder->getName()),
+        QString::fromStdString(reminder->getNote()),
+        QString::fromStdString(reminder->getLongNote()),
+        QString::fromStdString(reminder->getImage())
     };
 }
