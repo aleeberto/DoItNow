@@ -13,6 +13,7 @@ const QVector<FormWidgetVisitor::FieldConfig> FormWidgetVisitor::APPOINTMENT_FIE
     {"Note", "Inserisci note"},
     {"Data", "YYYYMMDD (es: 20250115)", FT::INTEGER},
     {"Ora", "HH (0-23)", FT::POSITIVE_INTEGER},
+    {"Minuti", "MM (0-59)", FT::INTEGER},  // Nuovo campo per minuti
     {"Durata (min)", "Durata in minuti", FT::POSITIVE_INTEGER},
     {"Immagine", "Inserisci percorso immagine o lascia vuoto", FT::IMAGE}
 };
@@ -182,6 +183,7 @@ QStringList FormWidgetVisitor::extractValues(Appointment* appointment) {
         QString::fromStdString(appointment->getNote()),
         QString::number(appointment->getDate()),
         QString::number(appointment->getHour()),
+        QString::number(appointment->getMinute()),  // Aggiunto minuti
         QString::number(appointment->getDurate()),
         QString::fromStdString(appointment->getImage())
     };

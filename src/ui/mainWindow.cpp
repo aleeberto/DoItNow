@@ -40,7 +40,7 @@ void MainWindow::setupUI()
     setupRightPanel();
 
     mainLayout->addWidget(leftWidget);
-    mainLayout->addWidget(rightScrollArea, 1);
+    mainLayout->addWidget(rightPanelContainer, 1);
 
     setMinimumSize(1150, 600);
 }
@@ -68,13 +68,34 @@ void MainWindow::setupLeftPanel()
 
 void MainWindow::setupRightPanel()
 {
-    rightLayoutWidget = new RightLayoutWidget(this);
+    // Container per tutto il pannello destro
+    rightPanelContainer = new QWidget();
+    QVBoxLayout* rightPanelLayout = new QVBoxLayout(rightPanelContainer);
+    rightPanelLayout->setContentsMargins(0, 0, 0, 0);
+    rightPanelLayout->setSpacing(0);
     
+    // Header toolbar in alto a destra
+    headerToolbar = new HeaderToolbarWidget(this);
+    rightPanelLayout->addWidget(headerToolbar);
+    
+    // Stack per le diverse viste
+    viewStack = new QStackedWidget();
+    
+    // Vista lista (esistente)
+    rightLayoutWidget = new RightLayoutWidget(this);
     rightScrollArea = new QScrollArea(this);
     rightScrollArea->setWidgetResizable(true);
     rightScrollArea->setWidget(rightLayoutWidget);
     rightScrollArea->setFrameShape(QFrame::NoFrame);
     rightScrollArea->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    
+    // Vista calendario (nuova)
+    calendarViewWidget = new CalendarViewWidget(this);
+    
+    viewStack->addWidget(rightScrollArea);      // index 0 = lista
+    viewStack->addWidget(calendarViewWidget);   // index 1 = calendario
+    
+    rightPanelLayout->addWidget(viewStack, 1);
 }
 
 void MainWindow::initializeServices()
@@ -85,6 +106,7 @@ void MainWindow::initializeServices()
     
     uiService = new UIService(this);
     rightLayoutWidget->setUIService(uiService);
+    calendarViewWidget->setUIService(uiService);
 
     createItemWidget = new CreateItemWidget(this);
     createItemWidget->setObjectName("CreateItemWidget");
@@ -94,15 +116,28 @@ void MainWindow::initializeServices()
 
 void MainWindow::setupConnections()
 {
+    // TopMenu connections
     connect(topMenu, &TopMenuWidget::uploadRequested, this, &MainWindow::handleUploadRequest);
     connect(topMenu, &TopMenuWidget::createRequested, this, &MainWindow::showCreateItemWidget);
     connect(topMenu, &TopMenuWidget::exportRequested, this, &MainWindow::handleExportRequest);
     connect(topMenu, &TopMenuWidget::closeRequested, this, &MainWindow::handleCloseRequest);
-    connect(topMenu, &TopMenuWidget::themeToggleRequested, this, &MainWindow::handleThemeToggle);
+    
+    // Header toolbar connections
+    connect(headerToolbar, &HeaderToolbarWidget::themeToggleRequested, this, &MainWindow::handleThemeToggle);
+    connect(headerToolbar, &HeaderToolbarWidget::calendarViewRequested, this, &MainWindow::showCalendarView);
+    connect(headerToolbar, &HeaderToolbarWidget::listViewRequested, this, &MainWindow::showListView);
+    
+    // CreateItemWidget connections
     connect(createItemWidget, &CreateItemWidget::itemCreated, this, &MainWindow::onEventItemCreated);
     connect(createItemWidget, &CreateItemWidget::itemUpdated, this, &MainWindow::onEventItemUpdated);
+    
+    // RightLayoutWidget connections
     connect(rightLayoutWidget, &RightLayoutWidget::eventEditRequested, this, &MainWindow::onEventEditRequested);
     connect(rightLayoutWidget, &RightLayoutWidget::eventDeleteRequested, this, &MainWindow::onEventDeleteRequested);
+    
+    // CalendarViewWidget connections
+    connect(calendarViewWidget, &CalendarViewWidget::eventEditRequested, this, &MainWindow::onEventEditRequested);
+    connect(calendarViewWidget, &CalendarViewWidget::eventDeleteRequested, this, &MainWindow::onEventDeleteRequested);
 }
 
 void MainWindow::loadDefaultData()
@@ -142,9 +177,13 @@ void MainWindow::handleCategorySelection(const QString& category)
     currentCategory = category;
     
     QVector<Event*> filteredEvents = eventService->filterEvents(category, searchBar->text());
+    
+    // Aggiorna entrambe le viste
     rightLayoutWidget->setEventCollection(filteredEvents);
     rightLayoutWidget->setJsonService(jsonService);
     rightLayoutWidget->displayEventCollection();
+    
+    calendarViewWidget->setEventCollection(filteredEvents);
 
     updateCategoryButtonStates(category);
 }
@@ -179,9 +218,13 @@ void MainWindow::loadEventData(const QString &filePath)
 void MainWindow::updateEventDisplay()
 {
     QVector<Event*> filteredEvents = eventService->filterEvents(currentCategory, searchBar->text());
+    
+    // Aggiorna entrambe le viste
     rightLayoutWidget->setEventCollection(filteredEvents);
     rightLayoutWidget->setJsonService(jsonService);
     rightLayoutWidget->displayEventCollection();
+    
+    calendarViewWidget->setEventCollection(filteredEvents);
 }
 
 void MainWindow::handleUploadRequest()
@@ -232,6 +275,11 @@ void MainWindow::handleExportRequest()
 
 void MainWindow::showCreateItemWidget()
 {
+    // Assicurati di essere nella vista lista
+    if (currentView != ViewType::LIST) {
+        showListView();
+    }
+    
     createItemWidget->resetToCreateMode();
     rightLayoutWidget->showCreateItemWidget(createItemWidget);
 }
@@ -256,6 +304,11 @@ void MainWindow::onSearchTextChanged(const QString& text)
 void MainWindow::onEventEditRequested(Event* event)
 {
     if (!event) return;
+    
+    // Passa alla vista lista per l'editing
+    if (currentView != ViewType::LIST) {
+        showListView();
+    }
     
     rightLayoutWidget->showCreateItemWidget(createItemWidget);
     createItemWidget->setEditMode(event);
@@ -311,13 +364,37 @@ void MainWindow::clearCurrentLibrary()
     updateCategoryButtonStates("Tutti");
     rightLayoutWidget->setEventCollection(QVector<Event*>());
     rightLayoutWidget->displayEventCollection();
+    calendarViewWidget->setEventCollection(QVector<Event*>());
 }
 
 void MainWindow::handleThemeToggle()
 {
     StyleUtils::toggleTheme();
-    topMenu->updateThemeButtonIcon();
+    headerToolbar->updateThemeButtonIcon();
     refreshAllStyles();
+}
+
+void MainWindow::showCalendarView()
+{
+    switchToView(ViewType::CALENDAR);
+}
+
+void MainWindow::showListView()
+{
+    switchToView(ViewType::LIST);
+}
+
+void MainWindow::switchToView(ViewType view)
+{
+    currentView = view;
+    
+    if (view == ViewType::CALENDAR) {
+        viewStack->setCurrentIndex(1);
+        headerToolbar->setCalendarViewActive(true);
+    } else {
+        viewStack->setCurrentIndex(0);
+        headerToolbar->setCalendarViewActive(false);
+    }
 }
 
 void MainWindow::refreshAllStyles()
@@ -330,6 +407,8 @@ void MainWindow::refreshAllStyles()
     rightScrollArea->setStyleSheet(StyleUtils::getScrollAreaStyle());
     
     rightLayoutWidget->refreshStyles();
+    calendarViewWidget->refreshStyles();
+    headerToolbar->refreshStyles();
     
     QWidget* centralWidget = this->centralWidget();
     if (centralWidget) {
@@ -348,7 +427,6 @@ void MainWindow::refreshAllStyles()
     // Aggiorna il top menu
     topMenu->setStyleSheet("");
     topMenu->setStyleSheet(StyleUtils::getSidebarStyle());
-    topMenu->updateThemeButtonIcon();
     
     QList<QPushButton*> topMenuButtons = topMenu->findChildren<QPushButton*>();
     for (QPushButton* button : topMenuButtons) {

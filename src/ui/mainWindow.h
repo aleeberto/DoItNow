@@ -9,9 +9,12 @@
 #include <QVBoxLayout>
 #include <QScrollArea>
 #include <QMessageBox>
+#include <QStackedWidget>
 #include "widget/topMenuWidget.h"
 #include "widget/createItemWidget.h"
 #include "widget/rightLayoutWidget.h"
+#include "widget/calendarViewWidget.h"
+#include "widget/headerToolbarWidget.h"
 #include "../services/jsonService.h"
 #include "../services/eventService.h"
 #include "../services/uiService.h"
@@ -37,6 +40,10 @@ private slots:
     void handleCloseRequest();
     void handleThemeToggle();
     void onSearchTextChanged(const QString& text);
+    
+    // Slot per cambio vista
+    void showCalendarView();
+    void showListView();
 
 private:
     // Enum per messaggi unificato
@@ -44,6 +51,12 @@ private:
         SUCCESS,
         WARNING,
         ERROR
+    };
+    
+    // Enum per tipo di vista
+    enum class ViewType {
+        LIST,
+        CALENDAR
     };
 
     // UI Setup methods
@@ -71,6 +84,9 @@ private:
 
     // Library management
     void clearCurrentLibrary();
+    
+    // View management
+    void switchToView(ViewType view);
 
     // Message helper unificato
     void showMessage(const QString& message, MessageType type = MessageType::SUCCESS);
@@ -82,10 +98,14 @@ private:
 
     // UI Components
     QWidget* leftWidget;
+    QWidget* rightPanelContainer;
     QScrollArea* rightScrollArea;
+    QStackedWidget* viewStack;
     TopMenuWidget* topMenu;
+    HeaderToolbarWidget* headerToolbar;
     CreateItemWidget* createItemWidget;
     RightLayoutWidget* rightLayoutWidget;
+    CalendarViewWidget* calendarViewWidget;
     QVBoxLayout* leftLayout;
     QLineEdit* searchBar;
     QMap<QString, QPushButton*> categoryButtons;
@@ -95,9 +115,10 @@ private:
     EventService* eventService;
     UIService* uiService;
 
-    // Initial state
+    // State
     QString currentJsonPath = "../resources/data/data.json";
     QString currentCategory = "Tutti";
+    ViewType currentView = ViewType::LIST;
 };
 
 #endif // MAINWINDOW_HEADER

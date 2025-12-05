@@ -54,7 +54,7 @@ private:
     // Costanti per validazione
     static const QStringList TRUE_VALUES;
     static const QStringList FALSE_VALUES;
-    static constexpr int MIN_APPOINTMENT_FIELDS = 6;
+    static constexpr int MIN_APPOINTMENT_FIELDS = 7;  // Incrementato per il campo minuti
     static constexpr int MIN_DEADLINE_FIELDS = 6;
     static constexpr int MIN_RECURSIVE_FIELDS = 5;
     static constexpr int MIN_REMINDER_FIELDS = 4;
@@ -87,6 +87,7 @@ private:
     bool validateInteger(QLineEdit* field, const QString& fieldName, QWidget* parent) const;
     bool validatePositiveInteger(QLineEdit* field, const QString& fieldName, QWidget* parent) const;
     bool validateBoolean(QLineEdit* field, const QString& fieldName, QWidget* parent) const;
+    bool validateMinute(QLineEdit* field, const QString& fieldName, QWidget* parent) const;  // Nuovo
     
     // Template per validazione
     template<typename Validator>

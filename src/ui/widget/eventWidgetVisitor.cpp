@@ -83,6 +83,7 @@ QLabel* EventWidgetVisitor::createTypeLabel(const QString& type) {
 QLabel* EventWidgetVisitor::createDetailLabel(const QString& text) {
     QLabel* label = new QLabel(text);
     label->setStyleSheet(StyleUtils::getBodyLabelStyle());
+    label->setWordWrap(true);  // Abilita il word wrap per testi lunghi
     return label;
 }
 
@@ -134,7 +135,8 @@ void EventWidgetVisitor::createEventWidget(EventType* event, const QString& type
 void EventWidgetVisitor::visit(Appointment* appointment) {
     createEventWidget<Appointment>(appointment, "Appointment", [this](QVBoxLayout* layout, Appointment* a) {
         layout->addWidget(createDetailLabel("Data: " + uiService->formatDate(a->getDate())));
-        layout->addWidget(createDetailLabel("Ora: " + uiService->formatTime(a->getHour())));
+        // Usa la nuova formattazione con minuti
+        layout->addWidget(createDetailLabel("Ora: " + uiService->formatTime(a->getHour(), a->getMinute())));
         layout->addWidget(createDetailLabel("Durata: " + uiService->formatDuration(a->getDurate())));
     });
 }
@@ -173,13 +175,12 @@ void EventWidgetVisitor::visit(Reminder* reminder) {
     createEventWidget<Reminder>(reminder, "Reminder", [this](QVBoxLayout* layout, Reminder* r) {
         QString longNote = QString::fromStdString(r->getLongNote());
         
-        // Tronca se troppo lungo
-        if (longNote.length() > 100) {
-            longNote = longNote.left(97) + "...";
-        }
-        
+        // Mostra il testo completo senza troncamento
         if (!longNote.isEmpty()) {
-            layout->addWidget(createDetailLabel("Dettagli: " + longNote));
+            QLabel* detailLabel = createDetailLabel("Dettagli: " + longNote);
+            detailLabel->setWordWrap(true);  // Assicura il word wrap
+            detailLabel->setMinimumWidth(200);  // Larghezza minima per il wrap
+            layout->addWidget(detailLabel);
         }
     });
 }

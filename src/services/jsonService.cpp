@@ -11,7 +11,7 @@ JsonService::JsonService(QObject *parent) : QObject(parent) {
 void JsonService::initializeFactories() {
     // Factory per Appointment
     eventFactories["Appointment"] = [](const QJsonObject& json) -> std::unique_ptr<Event> {
-        auto appointment = std::make_unique<Appointment>("", "", "default", 0, 0, 0);
+        auto appointment = std::make_unique<Appointment>("", "", "default", 0, 0, 0, 0);
         appointment->fromJsonSpecific(json);
         // Carica anche i campi base
         appointment->setName(json["name"].toString().toStdString());

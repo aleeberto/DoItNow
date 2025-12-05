@@ -12,8 +12,8 @@ const QStringList EventService::FALSE_VALUES = {"false", "0", "no"};
 // Definizione configurazioni di validazione
 const QMap<QString, EventService::ValidationConfig> EventService::validationConfigs = {
     {"Appointment", {MIN_APPOINTMENT_FIELDS, 
-                    {{2, "Data"}, {3, "Ora"}, {4, "Durata"}}, 
-                    {{3, "Ora"}, {4, "Durata"}}, 
+                    {{2, "Data"}, {3, "Ora"}, {4, "Minuti"}, {5, "Durata"}}, 
+                    {{3, "Ora"}, {5, "Durata"}}, 
                     {}}},
     {"Deadline", {MIN_DEADLINE_FIELDS,
                  {{2, "Data"}, {4, "Importanza"}},
@@ -41,12 +41,12 @@ EventService::~EventService()
 
 void EventService::initializeEventFactories() {
     // Factory per Appointment
-    // Ordine campi form: name(0), note(1), date(2), hour(3), durate(4), image(5)
-    // Ordine costruttore: name, note, image, date, hour, durate
+    // Ordine campi form: name(0), note(1), date(2), hour(3), minute(4), durate(5), image(6)
+    // Ordine costruttore: name, note, image, date, hour, minute, durate
     eventCreationFactories["Appointment"] = [this](const QList<QLineEdit*>& fields) -> Event* {
         if (fields.size() < MIN_APPOINTMENT_FIELDS) return nullptr;
         
-        QString imagePath = fields[5]->text().trimmed();
+        QString imagePath = fields[6]->text().trimmed();
         if (imagePath.isEmpty()) imagePath = "default";
         
         return new Appointment(
@@ -55,7 +55,8 @@ void EventService::initializeEventFactories() {
             imagePath.toStdString(),          // image
             fields[2]->text().toInt(),        // date
             fields[3]->text().toInt(),        // hour
-            fields[4]->text().toInt()         // durate
+            fields[4]->text().toInt(),        // minute
+            fields[5]->text().toInt()         // durate
         );
     };
     
@@ -296,6 +297,13 @@ bool EventService::validateFieldsByType(const QString& type, const QList<QLineEd
         return true;
     };
     
+    // Validazione speciale per i minuti negli Appointment
+    if (type == "Appointment" && fields.size() >= 5) {
+        if (!validateMinute(fields[4], "Minuti", parent)) {
+            return false;
+        }
+    }
+    
     return validateFields(config->integerFields, 
                          [this](QLineEdit* f, const QString& n, QWidget* p) { 
                              return validateInteger(f, n, p); 
@@ -350,6 +358,21 @@ bool EventService::validateBoolean(QLineEdit* field, const QString& fieldName, Q
                    "Valori accettati: %2\n"
                    "Valore inserito: '%3'")
                 .arg(fieldName, allValidValues.join(", "), field->text()));
+        field->setFocus();
+        field->selectAll();
+        return false;
+    }
+    return true;
+}
+
+bool EventService::validateMinute(QLineEdit* field, const QString& fieldName, QWidget* parent) const {
+    bool ok;
+    int value = field->text().trimmed().toInt(&ok);
+    
+    if (!ok || value < 0 || value > 59) {
+        QMessageBox::warning(parent, "Errore di Validazione",
+            QString("Il campo '%1' deve essere un numero tra 0 e 59.\nValore inserito: '%2'")
+                .arg(fieldName, field->text()));
         field->setFocus();
         field->selectAll();
         return false;

@@ -22,7 +22,7 @@ public:
     
     // Formattazione date e ore
     QString formatDate(int date) const;
-    QString formatTime(int hour) const;
+    QString formatTime(int hour, int minute = 0) const;  // Aggiunto parametro minute
     QString formatDuration(int minutes) const;
     QDate intToQDate(int date) const;
     int qDateToInt(const QDate& date) const;
@@ -30,6 +30,7 @@ public:
     // Validazione date/ore
     bool isValidDate(int date) const;
     bool isValidHour(int hour) const;
+    bool isValidMinute(int minute) const;  // Nuovo metodo
     
     // Gestione immagini con default
     QPixmap loadEventImage(const std::string& imagePath, const std::string& eventType) const;

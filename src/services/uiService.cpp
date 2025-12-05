@@ -27,12 +27,15 @@ QString UIService::formatDate(int date) const {
     return qDate.toString("dd/MM/yyyy");
 }
 
-QString UIService::formatTime(int hour) const {
+QString UIService::formatTime(int hour, int minute) const {
     if (!isValidHour(hour)) {
         return "Ora non valida";
     }
+    if (!isValidMinute(minute)) {
+        minute = 0;  // Default a 0 se non valido
+    }
     
-    return QString("%1:00").arg(hour, 2, 10, QChar('0'));
+    return QString("%1:%2").arg(hour, 2, 10, QChar('0')).arg(minute, 2, 10, QChar('0'));
 }
 
 QString UIService::formatDuration(int minutes) const {
@@ -82,6 +85,10 @@ bool UIService::isValidDate(int date) const {
 
 bool UIService::isValidHour(int hour) const {
     return hour >= 0 && hour <= 23;
+}
+
+bool UIService::isValidMinute(int minute) const {
+    return minute >= 0 && minute <= 59;
 }
 
 // ==================== GESTIONE IMMAGINI ====================

@@ -46,39 +46,17 @@ TopMenuWidget::TopMenuWidget(QWidget* parent) : QWidget(parent) {
     createButton->setStyleSheet(StyleUtils::getTopButtonStyle());
     createButton->setFixedHeight(StyleUtils::Dimensions::BUTTON_HEIGHT);
 
-    // Pulsante Theme Toggle
-    themeToggleButton = new QPushButton(this);
-    themeToggleButton->setObjectName("themeToggleButton");
-    themeToggleButton->setIconSize(QSize(StyleUtils::Dimensions::ICON_SIZE_LARGE, 
-                                        StyleUtils::Dimensions::ICON_SIZE_LARGE));
-    themeToggleButton->setFixedHeight(StyleUtils::Dimensions::BUTTON_HEIGHT);
-    themeToggleButton->setToolTip("Cambia tema (chiaro/scuro)");
-    themeToggleButton->setStyleSheet(StyleUtils::getTopButtonStyle());
-    updateThemeButtonIcon();
-
     // Connessioni dei pulsanti
     connect(uploadButton, &QPushButton::clicked, this, &TopMenuWidget::uploadRequested);
     connect(exportButton, &QPushButton::clicked, this, &TopMenuWidget::exportRequested);
     connect(closeButton, &QPushButton::clicked, this, &TopMenuWidget::closeRequested);
     connect(createButton, &QPushButton::clicked, this, &TopMenuWidget::createRequested);
-    connect(themeToggleButton, &QPushButton::clicked, this, &TopMenuWidget::themeToggleRequested);
 
     layout->addWidget(uploadButton);
     layout->addWidget(exportButton);
     layout->addWidget(closeButton);
     layout->addWidget(createButton);
-    layout->addStretch(); // Allontana se ingrandita la finestra
-    layout->addWidget(themeToggleButton);
+    layout->addStretch();
 
     this->setLayout(layout);
-}
-
-// Cambio icona pulsante toggle
-
-void TopMenuWidget::updateThemeButtonIcon() {
-    if (StyleUtils::getCurrentTheme() == StyleUtils::Theme::LIGHT) {
-        themeToggleButton->setIcon(QIcon("../resources/icon/moon.png"));
-    } else {
-        themeToggleButton->setIcon(QIcon("../resources/icon/sun.png"));
-    }
 }

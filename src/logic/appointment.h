@@ -6,17 +6,20 @@ using std::string;
 class Appointment : public Datable{
     private:
         int hour;
+        int minute;  // Nuovo campo per i minuti
         int durate;
 
     public:
-        Appointment(string name, string note, string image, int date, int hour, int durate);
+        Appointment(string name, string note, string image, int date, int hour, int minute, int durate);
         virtual ~Appointment() = default;
     
         // Getters/Setters specifici Appointment
         
         int getHour() const;
+        int getMinute() const;  // Nuovo getter
         int getDurate() const;
         void setHour(const int &updHour);
+        void setMinute(const int &updMinute);  // Nuovo setter
         void setDurate(const int &updDurate);
         
         // Implementazione metodi virtuali

@@ -5,6 +5,7 @@
             "durate": 60,
             "hour": 14,
             "image": "default",
+            "minute": 0,
             "name": "Riunione Team",
             "note": "Discussione progetto Q1",
             "type": "Appointment"
@@ -14,6 +15,7 @@
             "durate": 30,
             "hour": 10,
             "image": "default",
+            "minute": 0,
             "name": "Visita Medica",
             "note": "Controllo annuale",
             "type": "Appointment"
