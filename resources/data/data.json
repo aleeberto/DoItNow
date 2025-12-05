@@ -15,7 +15,7 @@
             "durate": 30,
             "hour": 10,
             "image": "default",
-            "minute": 0,
+            "minute": 30,
             "name": "Visita Medica",
             "note": "Controllo annuale",
             "type": "Appointment"
@@ -23,7 +23,7 @@
         {
             "date": 20250125,
             "image": "default",
-            "importance": 5,
+            "importance": 10,
             "name": "Consegna Relazione",
             "note": "Relazione progetto PAO",
             "postponable": false,
