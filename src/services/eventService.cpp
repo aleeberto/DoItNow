@@ -40,53 +40,77 @@ EventService::~EventService()
 }
 
 void EventService::initializeEventFactories() {
+    // Factory per Appointment
+    // Ordine campi form: name(0), note(1), date(2), hour(3), durate(4), image(5)
+    // Ordine costruttore: name, note, image, date, hour, durate
     eventCreationFactories["Appointment"] = [this](const QList<QLineEdit*>& fields) -> Event* {
         if (fields.size() < MIN_APPOINTMENT_FIELDS) return nullptr;
+        
+        QString imagePath = fields[5]->text().trimmed();
+        if (imagePath.isEmpty()) imagePath = "default";
         
         return new Appointment(
             fields[0]->text().toStdString(),  // name
             fields[1]->text().toStdString(),  // note
+            imagePath.toStdString(),          // image
             fields[2]->text().toInt(),        // date
             fields[3]->text().toInt(),        // hour
-            fields[4]->text().toInt(),        // durate
-            fields[5]->text().toStdString()   // image
+            fields[4]->text().toInt()         // durate
         );
     };
     
+    // Factory per Deadline
+    // Ordine campi form: name(0), note(1), date(2), postponable(3), importance(4), image(5)
+    // Ordine costruttore: name, note, image, date, postponable, importance
     eventCreationFactories["Deadline"] = [this](const QList<QLineEdit*>& fields) -> Event* {
         if (fields.size() < MIN_DEADLINE_FIELDS) return nullptr;
         
         bool postponable = parseBoolFromString(fields[3]->text(), "Posticipabile");
+        QString imagePath = fields[5]->text().trimmed();
+        if (imagePath.isEmpty()) imagePath = "default";
+        
         return new Deadline(
             fields[0]->text().toStdString(),  // name
             fields[1]->text().toStdString(),  // note
+            imagePath.toStdString(),          // image
             fields[2]->text().toInt(),        // date
             postponable,                      // postponable
-            fields[4]->text().toInt(),        // importance
-            fields[5]->text().toStdString()   // image
+            fields[4]->text().toInt()         // importance
         );
     };
     
+    // Factory per Recursive
+    // Ordine campi form: name(0), note(1), date(2), recurrence(3), image(4)
+    // Ordine costruttore: name, note, image, date, recurrence
     eventCreationFactories["Recursive"] = [this](const QList<QLineEdit*>& fields) -> Event* {
         if (fields.size() < MIN_RECURSIVE_FIELDS) return nullptr;
+        
+        QString imagePath = fields[4]->text().trimmed();
+        if (imagePath.isEmpty()) imagePath = "default";
         
         return new Recursive(
             fields[0]->text().toStdString(),  // name
             fields[1]->text().toStdString(),  // note
+            imagePath.toStdString(),          // image
             fields[2]->text().toInt(),        // date
-            fields[3]->text().toStdString(),  // recurrence
-            fields[4]->text().toStdString()   // image
+            fields[3]->text().toStdString()   // recurrence
         );
     };
     
+    // Factory per Reminder
+    // Ordine campi form: name(0), note(1), longnote(2), image(3)
+    // Ordine costruttore: name, note, image, longnote
     eventCreationFactories["Reminder"] = [this](const QList<QLineEdit*>& fields) -> Event* {
         if (fields.size() < MIN_REMINDER_FIELDS) return nullptr;
+        
+        QString imagePath = fields[3]->text().trimmed();
+        if (imagePath.isEmpty()) imagePath = "default";
         
         return new Reminder(
             fields[0]->text().toStdString(),  // name
             fields[1]->text().toStdString(),  // note
-            fields[2]->text().toStdString(),  // longnote
-            fields[3]->text().toStdString()   // image
+            imagePath.toStdString(),          // image
+            fields[2]->text().toStdString()   // longnote
         );
     };
 }

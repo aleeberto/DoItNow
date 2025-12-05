@@ -20,11 +20,10 @@ QJsonObject Reminder::toJsonSpecific() const {
 }
 
 void Reminder::fromJsonSpecific(const QJsonObject& json) {
-
     longnote = json["longnote"].toString().toStdString();
 }
     
-Event* Reminder::clone() const {
+Reminder* Reminder::clone() const {
     return new Reminder(getName(), getNote(), getImage(), longnote);
 }
 

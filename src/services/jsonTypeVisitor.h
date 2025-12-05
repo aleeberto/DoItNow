@@ -2,23 +2,21 @@
 #define JSONTYPEVISITOR_HEADER
 
 #include <QString>
-#include "../logic/mediaVisitor.h"
+#include "../logic/eventVisitor.h"
 
-class JsonTypeVisitor : public MediaVisitor {
+class JsonTypeVisitor : public EventVisitor {
 private:
-    QString mediaType;
+    QString eventType;
     
 public:
     JsonTypeVisitor() = default;
     
-    void visit(Film* film) override;
-    void visit(SerieTv* serieTv) override;
-    void visit(Anime* anime) override;
-    void visit(Libro* libro) override;
-    void visit(Manga* manga) override;
-    void visit(Cd* cd) override;
+    void visit(Appointment* appointment) override;
+    void visit(Deadline* deadline) override;
+    void visit(Recursive* recursive) override;
+    void visit(Reminder* reminder) override;
     
-    QString getMediaType() const;
+    QString getEventType() const;
     void reset();
 };
 

@@ -11,29 +11,45 @@ JsonService::JsonService(QObject *parent) : QObject(parent) {
 void JsonService::initializeFactories() {
     // Factory per Appointment
     eventFactories["Appointment"] = [](const QJsonObject& json) -> std::unique_ptr<Event> {
-        auto appointment = std::make_unique<Appointment>("", "", "", 0, 0, 0);
+        auto appointment = std::make_unique<Appointment>("", "", "default", 0, 0, 0);
         appointment->fromJsonSpecific(json);
+        // Carica anche i campi base
+        appointment->setName(json["name"].toString().toStdString());
+        appointment->setNote(json["note"].toString().toStdString());
+        appointment->setImage(json["image"].toString().toStdString());
         return appointment;
     };
     
     // Factory per Deadline
     eventFactories["Deadline"] = [](const QJsonObject& json) -> std::unique_ptr<Event> {
-        auto deadline = std::make_unique<Deadline>("", "", "", 0, false, 0);
+        auto deadline = std::make_unique<Deadline>("", "", "default", 0, false, 0);
         deadline->fromJsonSpecific(json);
+        // Carica anche i campi base
+        deadline->setName(json["name"].toString().toStdString());
+        deadline->setNote(json["note"].toString().toStdString());
+        deadline->setImage(json["image"].toString().toStdString());
         return deadline;
     };
     
     // Factory per Recursive
     eventFactories["Recursive"] = [](const QJsonObject& json) -> std::unique_ptr<Event> {
-        auto recursive = std::make_unique<Recursive>("", "", "", 0, "");
+        auto recursive = std::make_unique<Recursive>("", "", "default", 0, "");
         recursive->fromJsonSpecific(json);
+        // Carica anche i campi base
+        recursive->setName(json["name"].toString().toStdString());
+        recursive->setNote(json["note"].toString().toStdString());
+        recursive->setImage(json["image"].toString().toStdString());
         return recursive;
     };
     
     // Factory per Reminder
     eventFactories["Reminder"] = [](const QJsonObject& json) -> std::unique_ptr<Event> {
-        auto reminder = std::make_unique<Reminder>("", "", "", "");
+        auto reminder = std::make_unique<Reminder>("", "", "default", "");
         reminder->fromJsonSpecific(json);
+        // Carica anche i campi base
+        reminder->setName(json["name"].toString().toStdString());
+        reminder->setNote(json["note"].toString().toStdString());
+        reminder->setImage(json["image"].toString().toStdString());
         return reminder;
     };
 }

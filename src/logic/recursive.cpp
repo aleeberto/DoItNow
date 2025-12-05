@@ -1,8 +1,8 @@
 #include "recursive.h"
 using std::string;
 
-Recursive::Recursive(string name, string note, int date, string recurrence) :
-    Datable(name, note, date), recurrence(recurrence){}
+Recursive::Recursive(string name, string note, string image, int date, string recurrence) :
+    Datable(name, note, image, date), recurrence(recurrence){}
 
 string Recursive::getRecurrence() const{
     return recurrence;
@@ -25,7 +25,7 @@ void Recursive::fromJsonSpecific(const QJsonObject& json) {
 }
 
 Event* Recursive::clone() const {
-    return new Recursive(getName(), getDate(), getNote(), recurrence);
+    return new Recursive(getName(), getNote(), getImage(), getDate(), recurrence);
 }
 
 void Recursive::accept(EventVisitor* visitor) {

@@ -1,45 +1,33 @@
 #include "jsonTypeVisitor.h"
-#include "../logic/film.h"
-#include "../logic/serieTv.h"
-#include "../logic/anime.h"
-#include "../logic/libro.h"
-#include "../logic/manga.h"
-#include "../logic/cd.h"
+#include "../logic/appointment.h"
+#include "../logic/deadline.h"
+#include "../logic/recursive.h"
+#include "../logic/reminder.h"
 
-void JsonTypeVisitor::visit(Film* film) {
-    Q_UNUSED(film)
-    mediaType = "Film";
+void JsonTypeVisitor::visit(Appointment* appointment) {
+    Q_UNUSED(appointment)
+    eventType = "Appointment";
 }
 
-void JsonTypeVisitor::visit(SerieTv* serieTv) {
-    Q_UNUSED(serieTv)
-    mediaType = "Serie Tv";
+void JsonTypeVisitor::visit(Deadline* deadline) {
+    Q_UNUSED(deadline)
+    eventType = "Deadline";
 }
 
-void JsonTypeVisitor::visit(Anime* anime) {
-    Q_UNUSED(anime)
-    mediaType = "Anime";
+void JsonTypeVisitor::visit(Recursive* recursive) {
+    Q_UNUSED(recursive)
+    eventType = "Recursive";
 }
 
-void JsonTypeVisitor::visit(Libro* libro) {
-    Q_UNUSED(libro)
-    mediaType = "Libro";
+void JsonTypeVisitor::visit(Reminder* reminder) {
+    Q_UNUSED(reminder)
+    eventType = "Reminder";
 }
 
-void JsonTypeVisitor::visit(Manga* manga) {
-    Q_UNUSED(manga)
-    mediaType = "Manga";
-}
-
-void JsonTypeVisitor::visit(Cd* cd) {
-    Q_UNUSED(cd)
-    mediaType = "Cd";
-}
-
-QString JsonTypeVisitor::getMediaType() const {
-    return mediaType;
+QString JsonTypeVisitor::getEventType() const {
+    return eventType;
 }
 
 void JsonTypeVisitor::reset() {
-    mediaType.clear();
+    eventType.clear();
 }

@@ -1,4 +1,4 @@
-#include "datable.h"
+#include "appointment.h"
 using std::string;
 
 Appointment::Appointment(string name, string note, string image, int date, int hour, int durate) :

@@ -35,7 +35,7 @@ void Deadline::fromJsonSpecific(const QJsonObject& json) {
 }
 
 Event* Deadline::clone() const {
-    return new Deadline(getName(), getNote(), getDate(), postponable, importance);
+    return new Deadline(getName(), getNote(), getImage(), getDate(), postponable, importance);
 }
 
 void Deadline::accept(EventVisitor* visitor) {

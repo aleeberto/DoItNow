@@ -12,8 +12,8 @@ class Deadline : public Datable{
         Deadline(string name, string note, string image, int date, bool postponable, int importance);
         virtual ~Deadline() = default;
     
-        // Getters/Setters specifici Anime
-        bool isPostponable() const;
+        // Getters/Setters specifici Deadline
+        bool getPostponable() const;
         int getImportance() const;
         void setPostponable(const bool &updPostponable);
         void setImportance(const int &updImportance);

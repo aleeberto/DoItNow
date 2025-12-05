@@ -11,7 +11,7 @@ class Recursive : public Datable{
         Recursive(string name, string note, string image, int date, string recurrence);
         virtual ~Recursive() = default;
     
-        // Getters/Setters specifici Anime
+        // Getters/Setters specifici Recursive
         string getRecurrence() const;
         void setRecurrence(const string &updRecurrence);
         
