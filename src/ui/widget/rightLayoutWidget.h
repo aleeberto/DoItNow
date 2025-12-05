@@ -4,12 +4,12 @@
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QVector>
-#include "../../logic/media.h"
+#include "../../logic/event.h"
 #include "../../services/jsonService.h"
 #include "../../services/uiService.h"
 
 // Forward declaration
-class MediaWidgetVisitor;
+class EventWidgetVisitor;
 
 class RightLayoutWidget : public QWidget
 {
@@ -19,30 +19,30 @@ public:
     explicit RightLayoutWidget(QWidget *parent = nullptr);
     ~RightLayoutWidget();
 
-    void setMediaCollection(const QVector<Media*>& collection);
+    void setEventCollection(const QVector<Event*>& collection);
     void setJsonService(JsonService* service);
     void setUIService(UIService* service);
-    void displayMediaCollection();
+    void displayEventCollection();
     void clearLayout();
     void showCreateItemWidget(QWidget* createWidget);
     void refreshStyles();
 
 signals:
-    void mediaEditRequested(Media* media);
-    void mediaDeleteRequested(Media* media);
+    void eventEditRequested(Event* event);
+    void eventDeleteRequested(Event* event);
 
 private slots:
     void onEditButtonClicked();
     void onDeleteButtonClicked();
 
 private:
-    void addMediaCardToLayout(Media* media);
+    void addEventCardToLayout(Event* event);
 
     QVBoxLayout *mainLayout;
-    QVector<Media*> mediaCollection;
+    QVector<Event*> eventCollection;
     JsonService *jsonService;
     UIService *uiService;
-    MediaWidgetVisitor *widgetVisitor;
+    EventWidgetVisitor *widgetVisitor;
 };
 
 #endif // RIGHTLAYOUTWIDGET_HEADER

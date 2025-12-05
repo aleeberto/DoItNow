@@ -12,7 +12,7 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
     this->setStyleSheet(StyleUtils::getMainWindowStyle());
-    setWindowTitle("Bibliotheca Procurator");
+    setWindowTitle("Event Manager");
 
     setupUI();
     initializeServices();
@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 MainWindow::~MainWindow()
 {
-    delete mediaService;
+    delete eventService;
     delete jsonService;
 }
 
@@ -80,15 +80,15 @@ void MainWindow::setupRightPanel()
 void MainWindow::initializeServices()
 {
     jsonService = new JsonService(this);
-    mediaService = new MediaService(this);
-    mediaService->setJsonService(jsonService);
+    eventService = new EventService(this);
+    eventService->setJsonService(jsonService);
     
     uiService = new UIService(this);
     rightLayoutWidget->setUIService(uiService);
 
     createItemWidget = new CreateItemWidget(this);
     createItemWidget->setObjectName("CreateItemWidget");
-    createItemWidget->setMediaService(mediaService);
+    createItemWidget->setEventService(eventService);
     createItemWidget->hide();
 }
 
@@ -99,22 +99,22 @@ void MainWindow::setupConnections()
     connect(topMenu, &TopMenuWidget::exportRequested, this, &MainWindow::handleExportRequest);
     connect(topMenu, &TopMenuWidget::closeRequested, this, &MainWindow::handleCloseRequest);
     connect(topMenu, &TopMenuWidget::themeToggleRequested, this, &MainWindow::handleThemeToggle);
-    connect(createItemWidget, &CreateItemWidget::itemCreated, this, &MainWindow::onMediaItemCreated);
-    connect(createItemWidget, &CreateItemWidget::itemUpdated, this, &MainWindow::onMediaItemUpdated);
-    connect(rightLayoutWidget, &RightLayoutWidget::mediaEditRequested, this, &MainWindow::onMediaEditRequested);
-    connect(rightLayoutWidget, &RightLayoutWidget::mediaDeleteRequested, this, &MainWindow::onMediaDeleteRequested);
+    connect(createItemWidget, &CreateItemWidget::itemCreated, this, &MainWindow::onEventItemCreated);
+    connect(createItemWidget, &CreateItemWidget::itemUpdated, this, &MainWindow::onEventItemUpdated);
+    connect(rightLayoutWidget, &RightLayoutWidget::eventEditRequested, this, &MainWindow::onEventEditRequested);
+    connect(rightLayoutWidget, &RightLayoutWidget::eventDeleteRequested, this, &MainWindow::onEventDeleteRequested);
 }
 
 void MainWindow::loadDefaultData()
 {
     if (QFile::exists(currentJsonPath)) {
-        loadMediaData(currentJsonPath);
+        loadEventData(currentJsonPath);
     }
 }
 
 void MainWindow::setupCategoryButtons()
 {
-    static const QStringList categories = {"Tutti", "Film", "Serie Tv", "Anime", "Libro", "Manga", "Cd"};
+    static const QStringList categories = {"Tutti", "Appointment", "Deadline", "Recursive", "Reminder"};
 
     for (const QString &category : categories) {
         QPushButton *btn = createCategoryButton(category);
@@ -141,10 +141,10 @@ void MainWindow::handleCategorySelection(const QString& category)
 {
     currentCategory = category;
     
-    QVector<Media*> filteredMedia = mediaService->filterMedia(category, searchBar->text());
-    rightLayoutWidget->setMediaCollection(filteredMedia);
+    QVector<Event*> filteredEvents = eventService->filterEvents(category, searchBar->text());
+    rightLayoutWidget->setEventCollection(filteredEvents);
     rightLayoutWidget->setJsonService(jsonService);
-    rightLayoutWidget->displayMediaCollection();
+    rightLayoutWidget->displayEventCollection();
 
     updateCategoryButtonStates(category);
 }
@@ -159,7 +159,7 @@ void MainWindow::updateCategoryButtonStates(const QString& selectedCategory)
 void MainWindow::setupSearchBar()
 {
     searchBar = new QLineEdit();
-    searchBar->setPlaceholderText("Cerca per titolo...");
+    searchBar->setPlaceholderText("Cerca per nome...");
     searchBar->setClearButtonEnabled(true);
     searchBar->setStyleSheet(StyleUtils::getSearchBarStyle());
     searchBar->setFixedHeight(StyleUtils::Dimensions::BUTTON_HEIGHT);
@@ -168,20 +168,20 @@ void MainWindow::setupSearchBar()
     leftLayout->addWidget(searchBar);
 }
 
-void MainWindow::loadMediaData(const QString &filePath)
+void MainWindow::loadEventData(const QString &filePath)
 {
-    if (mediaService->loadFromFile(filePath)) {
+    if (eventService->loadFromFile(filePath)) {
         currentJsonPath = filePath;
-        updateMediaDisplay();
+        updateEventDisplay();
     }
 }
 
-void MainWindow::updateMediaDisplay()
+void MainWindow::updateEventDisplay()
 {
-    QVector<Media*> filteredMedia = mediaService->filterMedia(currentCategory, searchBar->text());
-    rightLayoutWidget->setMediaCollection(filteredMedia);
+    QVector<Event*> filteredEvents = eventService->filterEvents(currentCategory, searchBar->text());
+    rightLayoutWidget->setEventCollection(filteredEvents);
     rightLayoutWidget->setJsonService(jsonService);
-    rightLayoutWidget->displayMediaCollection();
+    rightLayoutWidget->displayEventCollection();
 }
 
 void MainWindow::handleUploadRequest()
@@ -194,7 +194,7 @@ void MainWindow::handleUploadRequest()
     );
     
     if (!filePath.isEmpty()) {
-        loadMediaData(filePath);
+        loadEventData(filePath);
         showMessage("File caricato correttamente!");
     }
 }
@@ -203,8 +203,8 @@ void MainWindow::handleExportRequest()
 {
     QString filePath = QFileDialog::getSaveFileName(
         this,
-        tr("Esporta biblioteca in JSON"),
-        QDir::homePath() + "/biblioteca_export.json",
+        tr("Esporta calendario in JSON"),
+        QDir::homePath() + "/calendario_export.json",
         tr("File JSON (*.json)")
     );
     
@@ -214,14 +214,14 @@ void MainWindow::handleExportRequest()
         filePath += ".json";
     }
     
-    if (mediaService->saveToFile(filePath)) {
-        showMessage("Biblioteca esportata correttamente in:\n" + QDir::toNativeSeparators(filePath));
+    if (eventService->saveToFile(filePath)) {
+        showMessage("Calendario esportato correttamente in:\n" + QDir::toNativeSeparators(filePath));
         
         if (QMessageBox::question(this, "Apri file esportato",
-                "Vuoi aprire il file appena esportato come biblioteca corrente?",
+                "Vuoi aprire il file appena esportato come calendario corrente?",
                 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes) {
-            loadMediaData(filePath);
-            showMessage("File caricato come biblioteca corrente!");
+            loadEventData(filePath);
+            showMessage("File caricato come calendario corrente!");
         }
     } else {
         showMessage("Impossibile esportare i dati in:\n" + QDir::toNativeSeparators(filePath) +
@@ -236,81 +236,81 @@ void MainWindow::showCreateItemWidget()
     rightLayoutWidget->showCreateItemWidget(createItemWidget);
 }
 
-void MainWindow::onMediaItemCreated(Media* newItem)
+void MainWindow::onEventItemCreated(Event* newItem)
 {
     if (!newItem) return;
     
-    handleMediaOperation(
-        [this, newItem]() { return mediaService->addMedia(newItem) && saveCurrentData(); },
-        "Media creato e salvato correttamente!\n" + QString::fromStdString(newItem->getTitolo()) + " è stato aggiunto alla biblioteca.",
-        "Media creato ma non è stato possibile salvarlo automaticamente.\nUsa il pulsante 'Salva' per salvare manualmente i dati."
+    handleEventOperation(
+        [this, newItem]() { return eventService->addEvent(newItem) && saveCurrentData(); },
+        "Evento creato e salvato correttamente!\n" + QString::fromStdString(newItem->getName()) + " è stato aggiunto al calendario.",
+        "Evento creato ma non è stato possibile salvarlo automaticamente.\nUsa il pulsante 'Salva' per salvare manualmente i dati."
     );
 }
 
 void MainWindow::onSearchTextChanged(const QString& text)
 {
     Q_UNUSED(text)
-    updateMediaDisplay();
+    updateEventDisplay();
 }
 
-void MainWindow::onMediaEditRequested(Media* media)
+void MainWindow::onEventEditRequested(Event* event)
 {
-    if (!media) return;
+    if (!event) return;
     
     rightLayoutWidget->showCreateItemWidget(createItemWidget);
-    createItemWidget->setEditMode(media);
+    createItemWidget->setEditMode(event);
 }
 
-void MainWindow::onMediaDeleteRequested(Media* media)
+void MainWindow::onEventDeleteRequested(Event* event)
 {
-    if (!media) return;
+    if (!event) return;
     
     if (QMessageBox::question(this, "Conferma Eliminazione",
             QString("Sei sicuro di voler eliminare '%1'?\n\nQuesta operazione non può essere annullata.")
-                .arg(QString::fromStdString(media->getTitolo())),
+                .arg(QString::fromStdString(event->getName())),
             QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes) {
         return;
     }
     
-    QString mediaTitle = QString::fromStdString(media->getTitolo());
+    QString eventName = QString::fromStdString(event->getName());
     
-    handleMediaOperation(
-        [this, media]() { return mediaService->deleteMedia(media) && saveCurrentData(); },
-        QString("'%1' è stato eliminato correttamente dalla biblioteca.").arg(mediaTitle),
-        "Impossibile salvare le modifiche.\nIl media è stato rimosso dalla visualizzazione ma la biblioteca non potrebbe essere aggiornata."
+    handleEventOperation(
+        [this, event]() { return eventService->deleteEvent(event) && saveCurrentData(); },
+        QString("'%1' è stato eliminato correttamente dal calendario.").arg(eventName),
+        "Impossibile salvare le modifiche.\nL'evento è stato rimosso dalla visualizzazione ma il calendario potrebbe non essere aggiornato."
     );
 }
 
-void MainWindow::onMediaItemUpdated(Media* oldMedia, Media* newMedia)
+void MainWindow::onEventItemUpdated(Event* oldEvent, Event* newEvent)
 {
-    if (!oldMedia || !newMedia) return;
+    if (!oldEvent || !newEvent) return;
     
-    handleMediaOperation(
-        [this, oldMedia, newMedia]() { return mediaService->updateMedia(oldMedia, newMedia) && saveCurrentData(); },
-        QString("'%1' è stato aggiornato").arg(QString::fromStdString(newMedia->getTitolo())),
-        "Impossibile salvare le modifiche.\nIl media è stato aggiornato nella visualizzazione ma la biblioteca non potrebbe essere aggiornata."
+    handleEventOperation(
+        [this, oldEvent, newEvent]() { return eventService->updateEvent(oldEvent, newEvent) && saveCurrentData(); },
+        QString("'%1' è stato aggiornato").arg(QString::fromStdString(newEvent->getName())),
+        "Impossibile salvare le modifiche.\nL'evento è stato aggiornato nella visualizzazione ma il calendario potrebbe non essere aggiornato."
     );
 }
 
 void MainWindow::handleCloseRequest()
 {
-    if (QMessageBox::question(this, "Chiudi Biblioteca",
-            "Sei sicuro di voler chiudere la biblioteca corrente?\n",
+    if (QMessageBox::question(this, "Chiudi Calendario",
+            "Sei sicuro di voler chiudere il calendario corrente?\n",
             QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes) {
         clearCurrentLibrary();
-        showMessage("La biblioteca è stata chiusa correttamente.");
+        showMessage("Il calendario è stato chiuso correttamente.");
     }
 }
 
 void MainWindow::clearCurrentLibrary()
 {
-    mediaService->clearMediaCollection();
+    eventService->clearEventCollection();
     currentJsonPath = "";
     currentCategory = "Tutti";
     searchBar->clear();
     updateCategoryButtonStates("Tutti");
-    rightLayoutWidget->setMediaCollection(QVector<Media*>());
-    rightLayoutWidget->displayMediaCollection();
+    rightLayoutWidget->setEventCollection(QVector<Event*>());
+    rightLayoutWidget->displayEventCollection();
 }
 
 void MainWindow::handleThemeToggle()
@@ -319,8 +319,6 @@ void MainWindow::handleThemeToggle()
     topMenu->updateThemeButtonIcon();
     refreshAllStyles();
 }
-
-// Per aggiornare gli stili di tutti i componenti UI, implementato dopo l'aggiunta deel tema scuro
 
 void MainWindow::refreshAllStyles()
 {
@@ -360,7 +358,6 @@ void MainWindow::refreshAllStyles()
     // Aggiorna il CreateItemWidget se è visibile
     if (createItemWidget) {
         createItemWidget->refreshStyles();
-        // Aggiorna lo stile del widget principale
         createItemWidget->setStyleSheet("");
         createItemWidget->setStyleSheet(StyleUtils::getContentAreaStyle());
         
@@ -397,14 +394,14 @@ void MainWindow::refreshAllStyles()
         }
     }
     
-    updateMediaDisplay();
+    updateEventDisplay();
     repaint();
     update();
 }
 
 bool MainWindow::saveCurrentData()
 {
-    return !currentJsonPath.isEmpty() && mediaService->saveToFile(currentJsonPath);
+    return !currentJsonPath.isEmpty() && eventService->saveToFile(currentJsonPath);
 }
 
 void MainWindow::showMessage(const QString& message, MessageType type)
@@ -422,13 +419,13 @@ void MainWindow::showMessage(const QString& message, MessageType type)
     }
 }
 
-bool MainWindow::handleMediaOperation(const std::function<bool()>& operation, 
+bool MainWindow::handleEventOperation(const std::function<bool()>& operation, 
                                      const QString& successMsg, 
                                      const QString& errorMsg)
 {
     if (operation()) {
         showMessage(successMsg);
-        updateMediaDisplay();
+        updateEventDisplay();
         return true;
     } else {
         showMessage(errorMsg, MessageType::ERROR);

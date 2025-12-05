@@ -4,14 +4,12 @@
 #include <QTimer>
 #include <QAbstractScrollArea>
 #include "../../services/styleUtils.h"
-#include "../../logic/film.h"
-#include "../../logic/serieTv.h"
-#include "../../logic/anime.h"
-#include "../../logic/libro.h"
-#include "../../logic/manga.h"
-#include "../../logic/cd.h"
+#include "../../logic/appointment.h"
+#include "../../logic/deadline.h"
+#include "../../logic/recursive.h"
+#include "../../logic/reminder.h"
 
-CreateItemWidget::CreateItemWidget(QWidget *parent) : QWidget(parent), editingMedia(nullptr), editMode(false), mediaService(nullptr), formVisitor(nullptr)
+CreateItemWidget::CreateItemWidget(QWidget *parent) : QWidget(parent), editingEvent(nullptr), editMode(false), eventService(nullptr), formVisitor(nullptr)
 {
     // Inizializza il visitor
     formVisitor = new FormWidgetVisitor(this);
@@ -34,29 +32,23 @@ CreateItemWidget::CreateItemWidget(QWidget *parent) : QWidget(parent), editingMe
     stackedFields = new QStackedWidget(formWidget);
     stackedFields->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
-    // Crea i form per ogni tipo di media usando il visitor
-    QStringList mediaTypes = {"Film", "Serie Tv", "Anime", "Libro", "Manga", "Cd"};
+    // Crea i form per ogni tipo di evento usando il visitor
+    QStringList eventTypes = {"Appointment", "Deadline", "Recursive", "Reminder"};
     
-    for (const QString& type : mediaTypes) {
+    for (const QString& type : eventTypes) {
         QWidget* formPage = nullptr;
         
-        if (type == "Film") {
-            formVisitor->visit((Film*)nullptr);
+        if (type == "Appointment") {
+            formVisitor->visit((Appointment*)nullptr);
             formPage = formVisitor->getResultWidget();
-        } else if (type == "Serie Tv") {
-            formVisitor->visit((SerieTv*)nullptr);
+        } else if (type == "Deadline") {
+            formVisitor->visit((Deadline*)nullptr);
             formPage = formVisitor->getResultWidget();
-        } else if (type == "Anime") {
-            formVisitor->visit((Anime*)nullptr);
+        } else if (type == "Recursive") {
+            formVisitor->visit((Recursive*)nullptr);
             formPage = formVisitor->getResultWidget();
-        } else if (type == "Libro") {
-            formVisitor->visit((Libro*)nullptr);
-            formPage = formVisitor->getResultWidget();
-        } else if (type == "Manga") {
-            formVisitor->visit((Manga*)nullptr);
-            formPage = formVisitor->getResultWidget();
-        } else if (type == "Cd") {
-            formVisitor->visit((Cd*)nullptr);
+        } else if (type == "Reminder") {
+            formVisitor->visit((Reminder*)nullptr);
             formPage = formVisitor->getResultWidget();
         }
         
@@ -67,8 +59,8 @@ CreateItemWidget::CreateItemWidget(QWidget *parent) : QWidget(parent), editingMe
         }
     }
 
-    // Selezione tipo di media da inserire
-    QLabel *label = new QLabel("Seleziona il tipo di oggetto:", formWidget);
+    // Selezione tipo di evento da inserire
+    QLabel *label = new QLabel("Seleziona il tipo di evento:", formWidget);
     label->setStyleSheet(StyleUtils::getSubtitleLabelStyle());
     
     formLayout->addWidget(label);
@@ -94,7 +86,7 @@ CreateItemWidget::CreateItemWidget(QWidget *parent) : QWidget(parent), editingMe
                                     StyleUtils::Dimensions::WIDGET_MARGIN);
     buttonLayout->setSpacing(0);
 
-    createButton = new QPushButton("Crea Media", buttonContainer);
+    createButton = new QPushButton("Crea Evento", buttonContainer);
     createButton->setFixedHeight(StyleUtils::Dimensions::BUTTON_HEIGHT_LARGE);
     createButton->setStyleSheet(StyleUtils::getPrimaryButtonStyle());
 
@@ -102,12 +94,11 @@ CreateItemWidget::CreateItemWidget(QWidget *parent) : QWidget(parent), editingMe
     buttonLayout->addWidget(createButton);
     buttonLayout->addStretch();
 
-    mainLayout->addWidget(scrollArea, 1); // stretch = 1 occupa tutto lo spazio
-    mainLayout->addWidget(buttonContainer, 0); // stretch = 0 altezza fissa bottone
+    mainLayout->addWidget(scrollArea, 1);
+    mainLayout->addWidget(buttonContainer, 0);
 
     setLayout(mainLayout);
     
-    // policy di dimensionamento tutto lo spazio disponibile
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     // Connessioni
@@ -149,7 +140,7 @@ void CreateItemWidget::updateScrollBarVisibility()
     }
 }
 
-Media* CreateItemWidget::createMediaItem() const
+Event* CreateItemWidget::createEventItem() const
 {
     QString type = itemTypeCombo->currentText();
     QWidget* currentPage = stackedFields->currentWidget();
@@ -157,14 +148,14 @@ Media* CreateItemWidget::createMediaItem() const
     
     QList<QLineEdit*> fields = currentPage->findChildren<QLineEdit*>();
 
-    if (!mediaService) {
+    if (!eventService) {
         QMessageBox::critical(const_cast<QWidget*>(parentWidget()),
             "Errore",
-            "MediaService non inizializzato");
+            "EventService non inizializzato");
         return nullptr;
     }
 
-    return mediaService->createMediaFromFields(type, fields, const_cast<QWidget*>(static_cast<const QWidget*>(this)));
+    return eventService->createEventFromFields(type, fields, const_cast<QWidget*>(static_cast<const QWidget*>(this)));
 }
 
 void CreateItemWidget::onCreateButtonClicked()
@@ -178,11 +169,11 @@ void CreateItemWidget::onCreateButtonClicked()
     };
     QTimer::singleShot(500, this, enableButton);
     
-    Media* newItem = createMediaItem();
+    Event* newItem = createEventItem();
     if (!newItem) return;
     
-    if (editMode && editingMedia) {
-        emit itemUpdated(editingMedia, newItem);
+    if (editMode && editingEvent) {
+        emit itemUpdated(editingEvent, newItem);
         clearEditMode();
     } else {
         emit itemCreated(newItem);
@@ -196,56 +187,48 @@ void CreateItemWidget::onItemTypeChanged(int index)
     QTimer::singleShot(0, this, &CreateItemWidget::updateScrollBarVisibility);
 }
 
-void CreateItemWidget::setEditMode(Media* media)
+void CreateItemWidget::setEditMode(Event* event)
 {
-    if (!media) return;
+    if (!event) return;
     
-    editingMedia = media;
+    editingEvent = event;
     editMode = true;
     
-    createButton->setText("Aggiorna Media");
+    createButton->setText("Aggiorna Evento");
     createButton->setStyleSheet(StyleUtils::getWarningButtonStyle());
     
     // Determina il tipo usando dynamic_cast
-    QString mediaType;
-    if (dynamic_cast<Film*>(media)) mediaType = "Film";
-    else if (dynamic_cast<SerieTv*>(media)) mediaType = "Serie Tv";
-    else if (dynamic_cast<Anime*>(media)) mediaType = "Anime";
-    else if (dynamic_cast<Libro*>(media)) mediaType = "Libro";
-    else if (dynamic_cast<Manga*>(media)) mediaType = "Manga";
-    else if (dynamic_cast<Cd*>(media)) mediaType = "Cd";
+    QString eventType;
+    if (dynamic_cast<Appointment*>(event)) eventType = "Appointment";
+    else if (dynamic_cast<Deadline*>(event)) eventType = "Deadline";
+    else if (dynamic_cast<Recursive*>(event)) eventType = "Recursive";
+    else if (dynamic_cast<Reminder*>(event)) eventType = "Reminder";
     else return; // Tipo non riconosciuto
     
-    int typeIndex = itemTypeCombo->findText(mediaType);
+    int typeIndex = itemTypeCombo->findText(eventType);
     if (typeIndex != -1) {
         itemTypeCombo->setCurrentIndex(typeIndex);
         stackedFields->setCurrentIndex(typeIndex);
-        populateFields(media, mediaType);
+        populateFields(event, eventType);
     }
 }
 
-void CreateItemWidget::populateCommonFields(const QList<QLineEdit*>& fields, Media* media) {
-    if (fields.size() >= 3) {
-        fields[0]->setText(QString::fromStdString(media->getTitolo()));
-        fields[1]->setText(QString::fromStdString(media->getImmagine()));
-        fields[2]->setText(QString::number(media->getAnno()));
+void CreateItemWidget::populateCommonFields(const QList<QLineEdit*>& fields, Event* event) {
+    if (fields.size() >= 2) {
+        fields[0]->setText(QString::fromStdString(event->getName()));
+        fields[1]->setText(QString::fromStdString(event->getNote()));
     }
 }
 
-void CreateItemWidget::populateSeriesFields(const QList<QLineEdit*>& fields, int numEpisodi, 
-                                           int numStagioni, int durataMedia, bool inCorso,
-                                           const std::string& creator, const std::string& company) {
-    if (fields.size() >= 9) {
-        fields[3]->setText(QString::number(numEpisodi));
-        fields[4]->setText(QString::number(numStagioni));
-        fields[5]->setText(QString::number(durataMedia));
-        fields[6]->setText(inCorso ? "true" : "false");
-        fields[7]->setText(QString::fromStdString(creator));
-        fields[8]->setText(QString::fromStdString(company));
+void CreateItemWidget::populateSeriesFields(const QList<QLineEdit*>& fields, int date, int value1, int value2) {
+    if (fields.size() >= 5) {
+        fields[2]->setText(QString::number(date));
+        fields[3]->setText(QString::number(value1));
+        fields[4]->setText(QString::number(value2));
     }
 }
 
-void CreateItemWidget::populateFields(Media* media, const QString& mediaType)
+void CreateItemWidget::populateFields(Event* event, const QString& eventType)
 {
     QWidget* currentForm = stackedFields->currentWidget();
     if (!currentForm) return;
@@ -253,55 +236,43 @@ void CreateItemWidget::populateFields(Media* media, const QString& mediaType)
     QList<QLineEdit*> fields = currentForm->findChildren<QLineEdit*>();
     
     // Popola campi comuni
-    populateCommonFields(fields, media);
+    populateCommonFields(fields, event);
     
     // Campi specifici per tipo
-    if (mediaType == "Film") {
-        if (auto* film = dynamic_cast<Film*>(media); film && fields.size() >= 6) {
-            fields[3]->setText(QString::fromStdString(film->getRegista()));
-            fields[4]->setText(QString::fromStdString(film->getAttoreProtagonista()));
-            fields[5]->setText(QString::number(film->getDurata()));
+    if (eventType == "Appointment") {
+        if (auto* appointment = dynamic_cast<Appointment*>(event); appointment && fields.size() >= 6) {
+            fields[2]->setText(QString::number(appointment->getDate()));
+            fields[3]->setText(QString::number(appointment->getHour()));
+            fields[4]->setText(QString::number(appointment->getDurate()));
+            fields[5]->setText(QString::fromStdString(appointment->getImage()));
         }
-    } else if (mediaType == "Serie Tv") {
-        if (auto* serie = dynamic_cast<SerieTv*>(media); serie) {
-            populateSeriesFields(fields, serie->getNumEpisodi(), serie->getNumStagioni(), 
-                               serie->getDurataMediaEp(), serie->getInCorso(),
-                               serie->getIdeatore(), serie->getCasaProduttrice());
+    } else if (eventType == "Deadline") {
+        if (auto* deadline = dynamic_cast<Deadline*>(event); deadline && fields.size() >= 6) {
+            fields[2]->setText(QString::number(deadline->getDate()));
+            fields[3]->setText(deadline->getPostponable() ? "true" : "false");
+            fields[4]->setText(QString::number(deadline->getImportance()));
+            fields[5]->setText(QString::fromStdString(deadline->getImage()));
         }
-    } else if (mediaType == "Anime") {
-        if (auto* anime = dynamic_cast<Anime*>(media); anime) {
-            populateSeriesFields(fields, anime->getNumEpisodi(), anime->getNumStagioni(),
-                               anime->getDurataMediaEp(), anime->getInCorso(),
-                               anime->getDisegnatore(), anime->getStudioAnimazione());
+    } else if (eventType == "Recursive") {
+        if (auto* recursive = dynamic_cast<Recursive*>(event); recursive && fields.size() >= 5) {
+            fields[2]->setText(QString::number(recursive->getDate()));
+            fields[3]->setText(QString::fromStdString(recursive->getRecurrence()));
+            fields[4]->setText(QString::fromStdString(recursive->getImage()));
         }
-    } else if (mediaType == "Libro") {
-        if (auto* libro = dynamic_cast<Libro*>(media); libro && fields.size() >= 6) {
-            fields[3]->setText(QString::fromStdString(libro->getScrittore()));
-            fields[4]->setText(QString::number(libro->getAnnoStampa()));
-            fields[5]->setText(QString::fromStdString(libro->getCasaEditrice()));
-        }
-    } else if (mediaType == "Manga") {
-        if (auto* manga = dynamic_cast<Manga*>(media); manga && fields.size() >= 7) {
-            fields[3]->setText(QString::fromStdString(manga->getScrittore()));
-            fields[4]->setText(QString::fromStdString(manga->getIllustratore()));
-            fields[5]->setText(QString::number(manga->getNumLibri()));
-            fields[6]->setText(manga->getConcluso() ? "true" : "false");
-        }
-    } else if (mediaType == "Cd") {
-        if (auto* cd = dynamic_cast<Cd*>(media); cd && fields.size() >= 6) {
-            fields[3]->setText(QString::fromStdString(cd->getArtista()));
-            fields[4]->setText(QString::number(cd->getNumTracce()));
-            fields[5]->setText(QString::number(cd->getDurataMedTracce()));
+    } else if (eventType == "Reminder") {
+        if (auto* reminder = dynamic_cast<Reminder*>(event); reminder && fields.size() >= 4) {
+            fields[2]->setText(QString::fromStdString(reminder->getLongNote()));
+            fields[3]->setText(QString::fromStdString(reminder->getImage()));
         }
     }
 }
 
 void CreateItemWidget::clearEditMode()
 {
-    editingMedia = nullptr;
+    editingEvent = nullptr;
     editMode = false;
     
-    createButton->setText("Crea Media");
+    createButton->setText("Crea Evento");
     createButton->setStyleSheet(StyleUtils::getPrimaryButtonStyle());
     
     clearAllFields();
@@ -324,10 +295,10 @@ void CreateItemWidget::clearAllFields()
 
 void CreateItemWidget::resetToCreateMode()
 {
-    editingMedia = nullptr;
+    editingEvent = nullptr;
     editMode = false;
     
-    createButton->setText("Crea Media");
+    createButton->setText("Crea Evento");
     createButton->setStyleSheet(StyleUtils::getPrimaryButtonStyle());
     
     clearAllFields();
@@ -343,9 +314,9 @@ bool CreateItemWidget::isInEditMode() const
     return editMode;
 }
 
-void CreateItemWidget::setMediaService(MediaService* service)
+void CreateItemWidget::setEventService(EventService* service)
 {
-    mediaService = service;
+    eventService = service;
 }
 
 void CreateItemWidget::refreshStyles()

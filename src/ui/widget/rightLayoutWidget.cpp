@@ -1,5 +1,5 @@
 #include "rightLayoutWidget.h"
-#include "mediaWidgetVisitor.h"
+#include "eventWidgetVisitor.h"
 #include "../../services/styleUtils.h"
 
 #include <QVBoxLayout>
@@ -24,9 +24,9 @@ RightLayoutWidget::~RightLayoutWidget()
     delete widgetVisitor;
 }
 
-void RightLayoutWidget::setMediaCollection(const QVector<Media*>& collection)
+void RightLayoutWidget::setEventCollection(const QVector<Event*>& collection)
 {
-    mediaCollection = collection;
+    eventCollection = collection;
 }
 
 void RightLayoutWidget::setJsonService(JsonService* service)
@@ -39,16 +39,16 @@ void RightLayoutWidget::setUIService(UIService* service)
     uiService = service;
     // Inizializza il visitor quando UIService è disponibile
     if (uiService && !widgetVisitor) {
-        widgetVisitor = new MediaWidgetVisitor(this, uiService);
+        widgetVisitor = new EventWidgetVisitor(this, uiService);
     }
 }
 
-void RightLayoutWidget::displayMediaCollection()
+void RightLayoutWidget::displayEventCollection()
 {
     clearLayout();
 
-    for (Media* media : mediaCollection) {
-        addMediaCardToLayout(media);
+    for (Event* event : eventCollection) {
+        addEventCardToLayout(event);
     }
 
     mainLayout->addStretch();
@@ -91,18 +91,18 @@ void RightLayoutWidget::showCreateItemWidget(QWidget* createWidget)
     mainLayout->addWidget(createWidget, 1);
 }
 
-void RightLayoutWidget::addMediaCardToLayout(Media* media)
+void RightLayoutWidget::addEventCardToLayout(Event* event)
 {
-    if (!media || !uiService || !widgetVisitor) return;
+    if (!event || !uiService || !widgetVisitor) return;
     
-    // Usa il visitor per creare il widget specifico per il tipo di media
-    media->accept(widgetVisitor);
-    QWidget* mediaCard = widgetVisitor->getResultWidget();
+    // Usa il visitor per creare il widget specifico per il tipo di evento
+    event->accept(widgetVisitor);
+    QWidget* eventCard = widgetVisitor->getResultWidget();
     
-    if (!mediaCard) return;
+    if (!eventCard) return;
 
     // Trova e connetti i pulsanti usando il pattern visitor
-    QList<QPushButton*> buttons = mediaCard->findChildren<QPushButton*>();
+    QList<QPushButton*> buttons = eventCard->findChildren<QPushButton*>();
     for (QPushButton* button : buttons) {
         if (button->objectName() == "editButton") {
             connect(button, &QPushButton::clicked, this, &RightLayoutWidget::onEditButtonClicked);
@@ -111,7 +111,7 @@ void RightLayoutWidget::addMediaCardToLayout(Media* media)
         }
     }
 
-    mainLayout->addWidget(mediaCard);
+    mainLayout->addWidget(eventCard);
 }
 
 void RightLayoutWidget::onEditButtonClicked()
@@ -119,11 +119,11 @@ void RightLayoutWidget::onEditButtonClicked()
     QPushButton* button = qobject_cast<QPushButton*>(sender());
     if (!button) return;
     
-    QVariant mediaVariant = button->property("media");
-    if (mediaVariant.isValid()) {
-        Media* media = static_cast<Media*>(mediaVariant.value<void*>());
-        if (media) {
-            emit mediaEditRequested(media);
+    QVariant eventVariant = button->property("event");
+    if (eventVariant.isValid()) {
+        Event* event = static_cast<Event*>(eventVariant.value<void*>());
+        if (event) {
+            emit eventEditRequested(event);
         }
     }
 }
@@ -133,11 +133,11 @@ void RightLayoutWidget::onDeleteButtonClicked()
     QPushButton* button = qobject_cast<QPushButton*>(sender());
     if (!button) return;
     
-    QVariant mediaVariant = button->property("media");
-    if (mediaVariant.isValid()) {
-        Media* media = static_cast<Media*>(mediaVariant.value<void*>());
-        if (media) {
-            emit mediaDeleteRequested(media);
+    QVariant eventVariant = button->property("event");
+    if (eventVariant.isValid()) {
+        Event* event = static_cast<Event*>(eventVariant.value<void*>());
+        if (event) {
+            emit eventDeleteRequested(event);
         }
     }
 }

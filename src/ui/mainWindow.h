@@ -13,9 +13,9 @@
 #include "widget/createItemWidget.h"
 #include "widget/rightLayoutWidget.h"
 #include "../services/jsonService.h"
-#include "../services/mediaService.h"
+#include "../services/eventService.h"
 #include "../services/uiService.h"
-#include "../logic/media.h"
+#include "../logic/event.h"
 
 class MainWindow : public QMainWindow
 {
@@ -28,10 +28,10 @@ public:
 private slots:
     // Slot principali
     void showCreateItemWidget();
-    void onMediaItemCreated(Media* newItem);
-    void onMediaItemUpdated(Media* oldMedia, Media* newMedia);
-    void onMediaEditRequested(Media* media);
-    void onMediaDeleteRequested(Media* media);
+    void onEventItemCreated(Event* newItem);
+    void onEventItemUpdated(Event* oldEvent, Event* newEvent);
+    void onEventEditRequested(Event* event);
+    void onEventDeleteRequested(Event* event);
     void handleUploadRequest();
     void handleExportRequest();
     void handleCloseRequest();
@@ -39,7 +39,7 @@ private slots:
     void onSearchTextChanged(const QString& text);
 
 private:
-    // Enum per messaggi unificato (success, warning, error) (check if working)
+    // Enum per messaggi unificato
     enum class MessageType {
         SUCCESS,
         WARNING,
@@ -65,18 +65,18 @@ private:
     void refreshAllStyles();
 
     // Data management
-    void loadMediaData(const QString &filePath);
-    void updateMediaDisplay();
+    void loadEventData(const QString &filePath);
+    void updateEventDisplay();
     bool saveCurrentData();
 
     // Library management
     void clearCurrentLibrary();
 
-    // Message helper unificato (check if working)
+    // Message helper unificato
     void showMessage(const QString& message, MessageType type = MessageType::SUCCESS);
     
-    // Helper per operazioni con media
-    bool handleMediaOperation(const std::function<bool()>& operation, 
+    // Helper per operazioni con eventi
+    bool handleEventOperation(const std::function<bool()>& operation, 
                              const QString& successMsg, 
                              const QString& errorMsg = "Operazione fallita");
 
@@ -92,7 +92,7 @@ private:
 
     // Services
     JsonService* jsonService;
-    MediaService* mediaService;
+    EventService* eventService;
     UIService* uiService;
 
     // Initial state

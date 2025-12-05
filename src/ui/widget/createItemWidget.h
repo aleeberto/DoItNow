@@ -12,8 +12,8 @@
 #include <QResizeEvent>
 #include <QMessageBox>
 #include <QMap>
-#include "../../logic/media.h"
-#include "../../services/mediaService.h"
+#include "../../logic/event.h"
+#include "../../services/eventService.h"
 
 // Forward declaration
 class FormWidgetVisitor;
@@ -26,18 +26,18 @@ public:
     explicit CreateItemWidget(QWidget *parent = nullptr);
     
     // Metodi principali
-    Media* createMediaItem() const;
-    void setMediaService(MediaService* service);
+    Event* createEventItem() const;
+    void setEventService(EventService* service);
     
-    // Gestione modalità, e stile
-    void setEditMode(Media* media);
+    // Gestione modalità e stile
+    void setEditMode(Event* event);
     void resetToCreateMode();
     bool isInEditMode() const;
     void refreshStyles();
 
 signals:
-    void itemCreated(Media* newItem);
-    void itemUpdated(Media* oldMedia, Media* newMedia);
+    void itemCreated(Event* newItem);
+    void itemUpdated(Event* oldEvent, Event* newEvent);
 
 public slots:
     void onItemTypeChanged(int index);
@@ -54,11 +54,9 @@ private:
     void updateScrollBarVisibility();
     
     // Edit mode helpers
-    void populateFields(Media* media, const QString& mediaType);
-    void populateCommonFields(const QList<QLineEdit*>& fields, Media* media);
-    void populateSeriesFields(const QList<QLineEdit*>& fields, int numEpisodi, int numStagioni, 
-                             int durataMedia, bool inCorso, const std::string& creator, 
-                             const std::string& company);
+    void populateFields(Event* event, const QString& eventType);
+    void populateCommonFields(const QList<QLineEdit*>& fields, Event* event);
+    void populateSeriesFields(const QList<QLineEdit*>& fields, int date, int value1, int value2);
     void clearEditMode();
     void clearAllFields();
 
@@ -69,16 +67,15 @@ private:
     QScrollArea *scrollArea;
         
     // Services
-    MediaService* mediaService;
+    EventService* eventService;
     FormWidgetVisitor* formVisitor;
     
     // Widget
     QMap<QString, QWidget*> typeWidgets;
 
     // Edit mode state
-    Media* editingMedia;
+    Event* editingEvent;
     bool editMode;
-
 };
 
 #endif // CREATEITEMWIDGET_HEADER
