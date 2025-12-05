@@ -34,7 +34,7 @@ void Appointment::fromJsonSpecific(const QJsonObject& json) {
     durate = json["durate"].toInt();
 }
 
-Appointment* Appointment::clone() const {
+Event* Appointment::clone() const {
     return new Appointment(getName(), getNote(), getImage(), getDate(), hour, durate);
 }
 
